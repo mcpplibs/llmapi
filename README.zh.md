@@ -8,22 +8,22 @@
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](LICENSE)
 [![OpenAI Compatible](https://img.shields.io/badge/OpenAI_API-Compatible-green.svg)](https://platform.openai.com/docs/api-reference)
 
-| English - [简体中文](README.zh.md) - [繁體中文](README.zh.hant.md) |
+| [English](README.md) - 简体中文 - [繁體中文](README.zh.hant.md) |
 |:---:|
-| [Documentation](docs/) - [C++ API](docs/cpp-api.md) - [C API](docs/c-api.md) - [Examples](docs/examples.md) |
+| [完整文档](docs/) - [C++ API](docs/cpp-api.md) - [C API](docs/c-api.md) - [示例](docs/examples.md) |
 
-Clean, type-safe LLM API client using C++23 modules. Fluent interface with zero-cost abstractions. Works with OpenAI, Poe, DeepSeek and compatible endpoints.
+简洁、类型安全的 LLM API 客户端，使用 C++23 模块。流式接口设计，零成本抽象。支持 OpenAI、Poe、DeepSeek 及兼容端点。
 
-## ✨ Features
+## ✨ 特性
 
-- **C++23 Modules** - `import mcpplibs.llmapi`
-- **Auto-Save History** - Conversation history managed automatically
-- **Type-Safe Streaming** - Concept-constrained callbacks
-- **Fluent Interface** - Chainable methods
-- **C API** - Full C language support with OOP style
-- **Provider Agnostic** - OpenAI, Poe, and compatible endpoints
+- **C++23 模块** - `import mcpplibs.llmapi`
+- **自动保存历史** - 对话历史自动管理
+- **类型安全流式** - 概念约束的回调函数
+- **流式接口** - 可链式调用的方法
+- **C 语言 API** - 完整的 C 语言支持，面向对象风格
+- **提供商无关** - OpenAI、Poe 及兼容端点
 
-## 📦 Quick Start
+## 📦 快速开始
 
 ### C++ API
 
@@ -73,35 +73,35 @@ int main(void) {
 }
 ```
 
-### Models / Providers
+### 模型 / 提供商
 
 ```cpp
 llmapi::Client client(apiKey, llmapi::URL::OpenAI);    // OpenAI
 llmapi::Client client(apiKey, llmapi::URL::Poe);       // Poe
 llmapi::Client client(apiKey, llmapi::URL::DeepSeek);  // Deepseek
-llmapi::Client client(apiKey, "https://custom.com");   // Custom
+llmapi::Client client(apiKey, "https://custom.com");   // 自定义
 ```
 
-## 🛠️ Building
+## 🛠️ 构建
 
 ```bash
-xmake              # Build
-xmake run basic    # Run example(after cofig OPENAI_API_KEY)
+xmake              # 构建
+xmake run basic    # 运行示例（需要先配置 OPENAI_API_KEY）
 ```
 
-## 📚 API Reference
+## 📚 API 参考
 
-**C++ Core Methods:**
-- `model(name)` - Set model
-- `user/system/assistant(content)` - Add messages
-- `request()` - Non-streaming (returns JSON)
-- `request(callback)` - Streaming
-- `getAnswer()` - Get last assistant reply
-- `getMessages()` - Get conversation history
-- `clear()` - Clear history
+**C++ 核心方法：**
+- `model(name)` - 设置模型
+- `user/system/assistant(content)` - 添加消息
+- `request()` - 非流式（返回 JSON）
+- `request(callback)` - 流式输出
+- `getAnswer()` - 获取最后的助手回复
+- `getMessages()` - 获取对话历史
+- `clear()` - 清空历史
 
-**C API:** All methods available via function pointers (`client->method(client, ...)`)
+**C API：** 所有方法通过函数指针访问 (`client->method(client, ...)`)
 
-## 📄 License
+## 📄 许可证
 
-Apache-2.0 - see [LICENSE](LICENSE)
+Apache-2.0 - 详见 [LICENSE](LICENSE)

@@ -8,22 +8,22 @@
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](LICENSE)
 [![OpenAI Compatible](https://img.shields.io/badge/OpenAI_API-Compatible-green.svg)](https://platform.openai.com/docs/api-reference)
 
-| English - [简体中文](README.zh.md) - [繁體中文](README.zh.hant.md) |
+| [English](README.md) - [简体中文](README.zh.md) - 繁體中文 |
 |:---:|
-| [Documentation](docs/) - [C++ API](docs/cpp-api.md) - [C API](docs/c-api.md) - [Examples](docs/examples.md) |
+| [完整文件](docs/) - [C++ API](docs/cpp-api.md) - [C API](docs/c-api.md) - [範例](docs/examples.md) |
 
-Clean, type-safe LLM API client using C++23 modules. Fluent interface with zero-cost abstractions. Works with OpenAI, Poe, DeepSeek and compatible endpoints.
+簡潔、型別安全的 LLM API 客戶端，使用 C++23 模組。流式介面設計，零成本抽象。支援 OpenAI、Poe、DeepSeek 及相容端點。
 
-## ✨ Features
+## ✨ 特性
 
-- **C++23 Modules** - `import mcpplibs.llmapi`
-- **Auto-Save History** - Conversation history managed automatically
-- **Type-Safe Streaming** - Concept-constrained callbacks
-- **Fluent Interface** - Chainable methods
-- **C API** - Full C language support with OOP style
-- **Provider Agnostic** - OpenAI, Poe, and compatible endpoints
+- **C++23 模組** - `import mcpplibs.llmapi`
+- **自動儲存歷史** - 對話歷史自動管理
+- **型別安全串流** - 概念約束的回呼函式
+- **流式介面** - 可鏈式呼叫的方法
+- **C 語言 API** - 完整的 C 語言支援，物件導向風格
+- **提供商無關** - OpenAI、Poe 及相容端點
 
-## 📦 Quick Start
+## 📦 快速開始
 
 ### C++ API
 
@@ -38,7 +38,7 @@ int main() {
 
     client.model("gpt-5")
           .system("You are a helpful assistant.")
-          .user("In one sentence, introduce modern C++. 并给出中文翻译")
+          .user("In one sentence, introduce modern C++. 並給出中文翻譯")
           .request([](std::string_view chunk) {
                 std::print("{}", chunk);
                 std::cout.flush();
@@ -65,7 +65,7 @@ int main(void) {
 
     c->set_model(c, "gpt-5");
     c->add_system_message(c, "You are a helpful assistant.");
-    c->add_user_message(c, "In one sentence, introduce modern C++. 并给出中文翻译");
+    c->add_user_message(c, "In one sentence, introduce modern C++. 並給出中文翻譯");
     c->request_stream(c, stream_print, NULL);
     
     c->destroy(c);
@@ -73,35 +73,35 @@ int main(void) {
 }
 ```
 
-### Models / Providers
+### 模型 / 提供商
 
 ```cpp
 llmapi::Client client(apiKey, llmapi::URL::OpenAI);    // OpenAI
 llmapi::Client client(apiKey, llmapi::URL::Poe);       // Poe
 llmapi::Client client(apiKey, llmapi::URL::DeepSeek);  // Deepseek
-llmapi::Client client(apiKey, "https://custom.com");   // Custom
+llmapi::Client client(apiKey, "https://custom.com");   // 自訂
 ```
 
-## 🛠️ Building
+## 🛠️ 建置
 
 ```bash
-xmake              # Build
-xmake run basic    # Run example(after cofig OPENAI_API_KEY)
+xmake              # 建置
+xmake run basic    # 執行範例（需先設定 OPENAI_API_KEY）
 ```
 
-## 📚 API Reference
+## 📚 API 參考
 
-**C++ Core Methods:**
-- `model(name)` - Set model
-- `user/system/assistant(content)` - Add messages
-- `request()` - Non-streaming (returns JSON)
-- `request(callback)` - Streaming
-- `getAnswer()` - Get last assistant reply
-- `getMessages()` - Get conversation history
-- `clear()` - Clear history
+**C++ 核心方法：**
+- `model(name)` - 設定模型
+- `user/system/assistant(content)` - 新增訊息
+- `request()` - 非串流（回傳 JSON）
+- `request(callback)` - 串流輸出
+- `getAnswer()` - 取得最後的助手回覆
+- `getMessages()` - 取得對話歷史
+- `clear()` - 清空歷史
 
-**C API:** All methods available via function pointers (`client->method(client, ...)`)
+**C API：** 所有方法透過函式指標存取 (`client->method(client, ...)`)
 
-## 📄 License
+## 📄 授權條款
 
-Apache-2.0 - see [LICENSE](LICENSE)
+Apache-2.0 - 詳見 [LICENSE](LICENSE)

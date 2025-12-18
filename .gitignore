@@ -39,3 +39,22 @@
 
 # debug information files
 *.dwo
+
+# Build directories
+build/
+.build/
+.xmake/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
