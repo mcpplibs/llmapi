@@ -23,7 +23,7 @@
 - **C 语言 API** - 完整的 C 语言支持，面向对象风格
 - **提供商无关** - OpenAI、Poe 及兼容端点
 
-## 📦 快速开始
+## 快速开始
 
 ### C++ API
 
@@ -87,6 +87,27 @@ llmapi::Client client(apiKey, "https://custom.com");   // 自定义
 ```bash
 xmake              # 构建
 xmake run basic    # 运行示例（需要先配置 OPENAI_API_KEY）
+```
+
+## 📦 在构建工具中使用
+
+### xmake
+
+```lua
+-- 0 - 添加 mcpplibs 索引仓库
+add_repositories("mcpplibs-index git@github.com:mcpplibs/mcpplibs-index.git")
+
+-- 1 - 添加需要的库和版本
+add_requires("llmapi 0.0.1")
+-- add_requires("llmapi 0.0.1", configs = { capi = true }) -- 如果使用 C API
+```
+
+> More: [mcpplibs-index](https://github.com/mcpplibs/mcpplibs-index)
+
+### cmake
+
+```
+todo...
 ```
 
 ## 📚 API 参考

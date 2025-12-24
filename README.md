@@ -23,7 +23,7 @@ Clean, type-safe LLM API client using C++23 modules. Fluent interface with zero-
 - **C API** - Full C language support with OOP style
 - **Provider Agnostic** - OpenAI, Poe, and compatible endpoints
 
-## 📦 Quick Start
+## Quick Start
 
 ### C++ API
 
@@ -87,6 +87,27 @@ llmapi::Client client(apiKey, "https://custom.com");   // Custom
 ```bash
 xmake              # Build
 xmake run basic    # Run example(after cofig OPENAI_API_KEY)
+```
+
+## 📦 Use in Build Tools
+
+### xmake
+
+```lua
+-- 0 - Add mcpplibs's index repos
+add_repositories("mcpplibs-index git@github.com:mcpplibs/mcpplibs-index.git")
+
+-- 1 - Add the libraries and versions you need
+add_requires("llmapi 0.0.1")
+-- add_requires("llmapi 0.0.1", configs = { capi = true }) -- if use c api
+```
+
+> More: [mcpplibs-index](https://github.com/mcpplibs/mcpplibs-index)
+
+### cmake
+
+```
+todo...
 ```
 
 ## 📚 API Reference
