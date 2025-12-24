@@ -1,3 +1,5 @@
+--add_rules("mode.debug", "mode.release")
+
 add_requires("libcurl 8.11.0")
 
 --includes("src/json")
@@ -6,7 +8,7 @@ set_languages("c++23")
 
 target("llmapi")
     set_kind("static")
-    add_files("src/*.cppm", { public = true })
+    add_files("src/*.cppm", { public = true, install = true })
     add_packages("libcurl")
     --add_deps("__nlohmann_json")
     add_includedirs("src/json")
@@ -18,7 +20,8 @@ target("llmapi")
     add_cxxflags("-fPIC")
 
 target("llmapi_c")
-    set_kind("shared")
+    --set_kind("shared")
+    set_kind("static")
     add_files("src/c/llmapi.cpp")
     add_deps("llmapi")
     add_packages("libcurl")
