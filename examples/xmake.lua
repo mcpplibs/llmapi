@@ -14,3 +14,4 @@ target("chat")
     add_deps("llmapi")
 
 includes("c")
+includes("cxx17")

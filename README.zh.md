@@ -3,6 +3,7 @@
 > Modern C++ LLM API client with openai-compatible support
 
 [![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg)](https://en.cppreference.com/w/cpp/23)
+[![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://en.cppreference.com/w/cpp/17)
 [![C API](https://img.shields.io/badge/C_API-ok-green.svg)](https://en.cppreference.com/w/cpp/23)
 [![Module](https://img.shields.io/badge/module-ok-green.svg)](https://en.cppreference.com/w/cpp/language/modules)
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](LICENSE)
@@ -22,6 +23,7 @@
 - **流式接口** - 可链式调用的方法
 - **C 语言 API** - 完整的 C 语言支持，面向对象风格
 - **提供商无关** - OpenAI、Poe 及兼容端点
+- **C++17 纯头文件** - 原生支持 C++17，仅需 `#include <llmapi.hpp>`（API 与 C++23 一致）
 
 ## 快速开始
 
