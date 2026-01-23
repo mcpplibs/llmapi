@@ -34,14 +34,14 @@ int main() {
             std::cout << "\nAI: ";
 
             client.request([](std::string_view chunk) {
-                std::cout << "{}";
+                std::cout << chunk;
                 std::cout.flush();
             });
 
             std::cout << "\n" << std::endl;
 
         } catch (const std::exception& e) {
-            std::cout << "\nError: {}\n" << std::endl;
+            std::cout << "\nError: " << e.what() << std::endl;
         }
     }
 

@@ -25,7 +25,7 @@ int main() {
         client.user("What is the capital of China?");
         client.request();
 
-        std::cout << "Answer: {}\n" << std::endl;
+        std::cout << "Answer: " << client.getAnswer() << "\n" << std::endl;
 
         // Example 2: Streaming request
         std::cout << "[Example 2] Streaming mode:" << std::endl;
@@ -35,7 +35,7 @@ int main() {
         std::cout << "Answer: ";
 
         client.request([](std::string_view chunk) {
-            std::cout << "{}";
+            std::cout << chunk;
             std::cout.flush();
         });
 
@@ -43,7 +43,7 @@ int main() {
 
         // Verify auto-save: get the last answer
         auto last_answer = client.getAnswer();
-        std::cout << "[Verification] Last answer length: {} chars\n" << std::endl;
+        std::cout << "[Verification] Last answer length: " << last_answer.size() << " chars\n" << std::endl;
 
         // Example 3: Translate the story to Chinese
         std::cout << "[Example 3] Translation (streaming):" << std::endl;
@@ -53,14 +53,14 @@ int main() {
         std::cout << "Answer: ";
 
         client.request([](std::string_view chunk) {
-            std::cout << "{}";
+            std::cout << chunk;
             std::cout.flush();
         });
 
         std::cout << "\n" << std::endl;
 
     } catch (const std::exception& e) {
-        std::cout << "\nError: {}\n" << std::endl;
+        std::cout << "\nError: " << e.what() << std::endl;
         return 1;
     }
 
