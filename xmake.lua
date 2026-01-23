@@ -30,7 +30,7 @@ target("llmapi_c")
 
 target("llmapi_cxx17")
     set_kind("headeronly")
-    add_packages("libcurl")
+    add_packages("libcurl", { public = true })
     add_includedirs("include", { public = true })
     add_includedirs("src/json", { public = true })
 
