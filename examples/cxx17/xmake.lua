@@ -1,0 +1,17 @@
+target("cxx17_hello_mcpp")
+    set_kind("binary")
+    add_files("hello_mcpp.cpp")
+    set_languages("c++17")
+    add_deps("llmapi_cxx17")
+
+target("cxx17_basic")
+    set_kind("binary")
+    add_files("basic.cpp")
+    set_languages("c++17")
+    add_deps("llmapi_cxx17")
+
+target("cxx17_chat")
+    set_kind("binary")
+    add_files("chat.cpp")
+    set_languages("c++17")
+    add_deps("llmapi_cxx17")

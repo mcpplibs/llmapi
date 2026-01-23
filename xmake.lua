@@ -28,4 +28,10 @@ target("llmapi_c")
     add_includedirs("include", { public = true })
     add_headerfiles("include/llmapi.h")
 
+target("llmapi_cxx17")
+    set_kind("headeronly")
+    add_packages("libcurl")
+    add_includedirs("include", { public = true })
+    add_includedirs("src/json", { public = true })
+
 includes("examples")
