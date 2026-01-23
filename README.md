@@ -3,6 +3,7 @@
 > Modern C++ LLM API client with openai-compatible support
 
 [![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg)](https://en.cppreference.com/w/cpp/23)
+[![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://en.cppreference.com/w/cpp/17)
 [![C API](https://img.shields.io/badge/C_API-ok-green.svg)](https://en.cppreference.com/w/cpp/23)
 [![Module](https://img.shields.io/badge/module-ok-green.svg)](https://en.cppreference.com/w/cpp/language/modules)
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](LICENSE)
@@ -22,6 +23,7 @@ Clean, type-safe LLM API client using C++23 modules. Fluent interface with zero-
 - **Fluent Interface** - Chainable methods
 - **C API** - Full C language support with OOP style
 - **Provider Agnostic** - OpenAI, Poe, and compatible endpoints
+- **C++17 Header-only** - Native support via `#include <llmapi.hpp>` (API identical to C++23)
 
 ## Quick Start
 
