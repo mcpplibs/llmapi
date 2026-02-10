@@ -3,7 +3,7 @@ module;
 #include <json.hpp>
 
 //export module nlohmann.json; // workaround for module name conflict in some build systems
-export module mcpplibs.llmapi:json;
+export module mcpplibs.llmapi.nlohmann.json;
 
 export namespace nlohmann {
     using ::nlohmann::adl_serializer;
