@@ -1,4 +1,4 @@
-export module mcpplibs.llmapi.url;
+export module mcpplibs.llmapi:url;
 
 import std;
 
