@@ -2,12 +2,12 @@ module;
 
 #include <curl/curl.h>
 
-export module mcpplibs.llmapi.openai;
+export module mcpplibs.llmapi:openai;
+
+export import :json;
+export import :url;
 
 import std;
-import nlohmann.json;
-
-import mcpplibs.llmapi.url;
 
 export namespace mcpplibs::llmapi::openai {
 

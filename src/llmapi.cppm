@@ -1,11 +1,10 @@
 export module mcpplibs.llmapi;
 
+export import :url;
+export import :json;
+export import :openai;
+
 import std;
-
-import nlohmann.json;
-
-import mcpplibs.llmapi.url;
-import mcpplibs.llmapi.openai;
 
 namespace mcpplibs::llmapi {
     export using OpenAI = openai::OpenAI;
