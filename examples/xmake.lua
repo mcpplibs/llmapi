@@ -18,6 +18,3 @@ if not is_host("macosx") then
         add_files("chat.cpp")
         add_deps("llmapi")
 end
-
-
-includes("c")

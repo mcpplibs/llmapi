@@ -15,17 +15,5 @@ target("llmapi")
     add_includedirs("src/json")
     add_headerfiles("src/json/json.hpp")
     add_files("src/json/json.cppm", { public = true })
-    -- relocation R_X86_64_32 against `.rodata' can not be used when making a shared object; recompile with -fPIC
-    -- ld: failed to set dynamic section sizes: bad value
-    -- collect2: error: ld returned 1 exit status
-    add_cxxflags("-fPIC")
-
-target("llmapi_c")
-    --set_kind("shared")
-    set_kind("static")
-    add_files("src/c/llmapi.cpp")
-    add_deps("llmapi")
-    add_includedirs("include", { public = true })
-    add_headerfiles("include/llmapi.h")
 
 includes("examples")

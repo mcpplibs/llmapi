@@ -16,14 +16,6 @@ URL::Poe       // "https://api.poe.com/v1"
 URL::DeepSeek  // Add more as needed
 ```
 
-```c
-// C
-#include "llmapi.h"
-
-LLMAPI_URL_OPENAI  // "https://api.openai.com/v1"
-LLMAPI_URL_POE     // "https://api.poe.com/v1"
-```
-
 ## OpenAI
 
 Official OpenAI API.
@@ -34,14 +26,6 @@ Client client(std::getenv("OPENAI_API_KEY"), URL::OpenAI);
 client.model("gpt-4");  // or gpt-4-turbo, gpt-3.5-turbo, etc.
 ```
 
-**C:**
-```c
-llmapi_client_t* c = llmapi_client_create(
-    getenv("OPENAI_API_KEY"),
-    LLMAPI_URL_OPENAI
-);
-c->set_model(c, "gpt-4");
-```
 
 **Get API Key:**
 - Visit [OpenAI Platform](https://platform.openai.com/api-keys)
@@ -56,15 +40,6 @@ Poe platform (supports multiple models including GPT-4, Claude, etc.).
 ```cpp
 Client client(std::getenv("OPENAI_API_KEY"), URL::Poe);
 client.model("gpt-5");  // or claude-3-opus, etc.
-```
-
-**C:**
-```c
-llmapi_client_t* c = llmapi_client_create(
-    getenv("OPENAI_API_KEY"),
-    LLMAPI_URL_POE
-);
-c->set_model(c, "gpt-5");
 ```
 
 **Get API Key:**
@@ -88,12 +63,6 @@ Client client(apiKey, URL::DeepSeek);
 client.model("deepseek-chat");
 ```
 
-**C:**
-```c
-llmapi_client_t* c = llmapi_client_create(apiKey, LLMAPI_URL_DEEPSEEK);
-c->set_model(c, "deepseek-chat");
-```
-
 ## Custom Provider
 
 Any OpenAI-compatible endpoint.
@@ -102,15 +71,6 @@ Any OpenAI-compatible endpoint.
 ```cpp
 Client client(apiKey, "https://your-endpoint.com/v1");
 client.model("your-model");
-```
-
-**C:**
-```c
-llmapi_client_t* c = llmapi_client_create(
-    apiKey,
-    "https://your-endpoint.com/v1"
-);
-c->set_model(c, "your-model");
 ```
 
 ## Azure OpenAI
@@ -124,14 +84,6 @@ Client client(
 );
 ```
 
-**C:**
-```c
-llmapi_client_t* c = llmapi_client_create(
-    azure_api_key,
-    "https://your-resource.openai.azure.com/openai/deployments/your-deployment"
-);
-```
-
 ## Local Models (Ollama, LM Studio, etc.)
 
 Any local server with OpenAI-compatible API.
@@ -141,15 +93,6 @@ Any local server with OpenAI-compatible API.
 // Ollama example
 Client client("dummy-key", "http://localhost:11434/v1");
 client.model("llama2");
-```
-
-**C:**
-```c
-llmapi_client_t* c = llmapi_client_create(
-    "dummy-key",
-    "http://localhost:11434/v1"
-);
-c->set_model(c, "llama2");
 ```
 
 ## Environment Variables
@@ -175,14 +118,6 @@ Then in code:
 **C++:**
 ```cpp
 Client client(std::getenv("OPENAI_API_KEY"), URL::OpenAI);
-```
-
-**C:**
-```c
-llmapi_client_t* c = llmapi_client_create(
-    getenv("OPENAI_API_KEY"),
-    LLMAPI_URL_OPENAI
-);
 ```
 
 ## Provider Comparison
@@ -249,5 +184,4 @@ client.model("deepseek-chat");  // DeepSeek
 
 - [Getting Started](getting-started.md)
 - [C++ API Reference](cpp-api.md)
-- [C API Reference](c-api.md)
 - [Examples](examples.md)
