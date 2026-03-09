@@ -3,6 +3,7 @@ export module mcpplibs.tinyhttps:http;
 import :tls;
 import :socket;
 import :sse;
+import :proxy;
 import std;
 
 namespace mcpplibs::tinyhttps {
@@ -248,8 +249,22 @@ public:
             // Create new connection
             auto [insertIt, ok] = pool_.emplace(poolKey, TlsSocket{});
             sock = &insertIt->second;
-            if (!sock->connect(parsed.host.c_str(), parsed.port,
-                              config_.connectTimeoutMs, config_.verifySsl)) {
+            bool connected = false;
+            if (config_.proxy.has_value()) {
+                auto proxyConf = parse_proxy_url(config_.proxy.value());
+                auto tunnel = proxy_connect(proxyConf.host, proxyConf.port,
+                                           parsed.host, parsed.port,
+                                           config_.connectTimeoutMs);
+                if (tunnel.is_valid()) {
+                    connected = sock->connect_over(std::move(tunnel),
+                                                   parsed.host.c_str(),
+                                                   config_.verifySsl);
+                }
+            } else {
+                connected = sock->connect(parsed.host.c_str(), parsed.port,
+                                         config_.connectTimeoutMs, config_.verifySsl);
+            }
+            if (!connected) {
                 pool_.erase(poolKey);
                 response.statusCode = 0;
                 response.statusText = "Connection failed";
@@ -484,8 +499,22 @@ public:
             }
             auto [insertIt, ok] = pool_.emplace(poolKey, TlsSocket{});
             sock = &insertIt->second;
-            if (!sock->connect(parsed.host.c_str(), parsed.port,
-                              config_.connectTimeoutMs, config_.verifySsl)) {
+            bool connected = false;
+            if (config_.proxy.has_value()) {
+                auto proxyConf = parse_proxy_url(config_.proxy.value());
+                auto tunnel = proxy_connect(proxyConf.host, proxyConf.port,
+                                           parsed.host, parsed.port,
+                                           config_.connectTimeoutMs);
+                if (tunnel.is_valid()) {
+                    connected = sock->connect_over(std::move(tunnel),
+                                                   parsed.host.c_str(),
+                                                   config_.verifySsl);
+                }
+            } else {
+                connected = sock->connect(parsed.host.c_str(), parsed.port,
+                                         config_.connectTimeoutMs, config_.verifySsl);
+            }
+            if (!connected) {
                 pool_.erase(poolKey);
                 response.statusCode = 0;
                 response.statusText = "Connection failed";
@@ -677,6 +706,7 @@ public:
     }
 
     HttpClientConfig& config() { return config_; }
+    const HttpClientConfig& config() const { return config_; }
 
 private:
     HttpClientConfig config_;
