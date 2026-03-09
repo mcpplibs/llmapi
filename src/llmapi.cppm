@@ -6,6 +6,7 @@ export import :coro;
 export import :provider;
 export import :client;
 export import :openai;
+export import :anthropic;
 
 import std;
 
