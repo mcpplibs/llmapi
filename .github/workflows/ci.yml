@@ -16,15 +16,12 @@ jobs:
         env:
           XLINGS_NON_INTERACTIVE: 1
         run: |
-          curl -fsSL https://raw.githubusercontent.com/d2learn/xlings/main/tools/other/quick_install.sh | bash
+          curl -fsSL https://raw.githubusercontent.com/d2learn/xlings/refs/heads/main/tools/other/quick_install.sh | bash
           echo "XLINGS_HOME=$HOME/.xlings" >> "$GITHUB_ENV"
           echo "$HOME/.xlings/subos/current/bin" >> "$GITHUB_PATH"
 
       - name: Install dependencies
         run: xlings install
-
-      - name: Configure xmake
-        run: xmake f --toolchain=llvm --sdk="$HOME/.xlings/data/xpkgs/xim-x-llvm/20.0.7" -y -vvD
 
       - name: Build
         run: xmake build -a -y -vvD
@@ -48,12 +45,15 @@ jobs:
         env:
           XLINGS_NON_INTERACTIVE: 1
         run: |
-          curl -fsSL https://raw.githubusercontent.com/d2learn/xlings/main/tools/other/quick_install.sh | bash
+          curl -fsSL https://raw.githubusercontent.com/d2learn/xlings/refs/heads/main/tools/other/quick_install.sh | bash
           echo "XLINGS_HOME=$HOME/.xlings" >> "$GITHUB_ENV"
           echo "$HOME/.xlings/subos/current/bin" >> "$GITHUB_PATH"
 
       - name: Install dependencies
         run: xlings install
+
+      - name: Configure xmake
+        run: xmake f --toolchain=llvm --sdk="$HOME/.xlings/data/xpkgs/xim-x-llvm/20.0.7" -y -vvD
 
       - name: Build
         run: xmake build -a -y -vvD
@@ -78,7 +78,7 @@ jobs:
           XLINGS_NON_INTERACTIVE: "1"
         shell: pwsh
         run: |
-          irm https://raw.githubusercontent.com/d2learn/xlings/main/tools/other/quick_install.ps1 | iex
+          irm https://raw.githubusercontent.com/d2learn/xlings/refs/heads/main/tools/other/quick_install.ps1 | iex
           echo "XLINGS_HOME=$env:USERPROFILE\.xlings" >> $env:GITHUB_ENV
           echo "$env:USERPROFILE\.xlings\subos\current\bin" >> $env:GITHUB_PATH
 
