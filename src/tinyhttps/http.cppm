@@ -2,6 +2,7 @@ export module mcpplibs.tinyhttps:http;
 
 import :tls;
 import :socket;
+import :sse;
 import std;
 
 namespace mcpplibs::tinyhttps {
@@ -37,6 +38,13 @@ export struct HttpClientConfig {
     bool verifySsl { true };
     bool keepAlive { true };
 };
+
+export template<typename F>
+concept SseCallback = std::invocable<F, const SseEvent&> &&
+                      std::same_as<std::invoke_result_t<F, const SseEvent&>, bool>;
+                      // return false to stop receiving
+
+export using SseCallbackFn = std::function<bool(const SseEvent&)>;
 
 struct ParsedUrl {
     std::string scheme;
@@ -443,6 +451,224 @@ public:
 
         // Handle connection pooling
         if (connectionClose) {
+            sock->close();
+            pool_.erase(poolKey);
+        }
+
+        return response;
+    }
+
+    // Streaming SSE request — reads response body incrementally, feeding
+    // chunks through SseParser to the caller's callback.  The callback
+    // receives each SseEvent and returns true to continue or false to stop.
+    HttpResponse send_stream(const HttpRequest& request, SseCallbackFn callback) {
+        HttpResponse response;
+
+        auto parsed = parse_url(request.url);
+        if (parsed.scheme != "https") {
+            response.statusCode = 0;
+            response.statusText = "Only HTTPS is supported";
+            return response;
+        }
+
+        std::string poolKey = parsed.host + ":" + std::to_string(parsed.port);
+
+        // Get or create connection
+        TlsSocket* sock = nullptr;
+        auto it = pool_.find(poolKey);
+        if (it != pool_.end() && it->second.is_valid()) {
+            sock = &it->second;
+        } else {
+            if (it != pool_.end()) {
+                pool_.erase(it);
+            }
+            auto [insertIt, ok] = pool_.emplace(poolKey, TlsSocket{});
+            sock = &insertIt->second;
+            if (!sock->connect(parsed.host.c_str(), parsed.port,
+                              config_.connectTimeoutMs, config_.verifySsl)) {
+                pool_.erase(poolKey);
+                response.statusCode = 0;
+                response.statusText = "Connection failed";
+                return response;
+            }
+        }
+
+        // Build request — same as send()
+        std::string reqStr;
+        reqStr += method_to_string(request.method);
+        reqStr += " ";
+        reqStr += parsed.path;
+        reqStr += " HTTP/1.1\r\n";
+        if (!has_header(request.headers, "Host")) {
+            reqStr += "Host: ";
+            reqStr += parsed.host;
+            if (parsed.port != 443) {
+                reqStr += ":";
+                reqStr += std::to_string(parsed.port);
+            }
+            reqStr += "\r\n";
+        }
+        if (!request.body.empty() && !has_header(request.headers, "Content-Length")) {
+            reqStr += "Content-Length: ";
+            reqStr += std::to_string(request.body.size());
+            reqStr += "\r\n";
+        }
+        for (const auto& [key, value] : request.headers) {
+            reqStr += key;
+            reqStr += ": ";
+            reqStr += value;
+            reqStr += "\r\n";
+        }
+        if (!has_header(request.headers, "Connection")) {
+            if (config_.keepAlive) {
+                reqStr += "Connection: keep-alive\r\n";
+            } else {
+                reqStr += "Connection: close\r\n";
+            }
+        }
+        reqStr += "\r\n";
+        if (!request.body.empty()) {
+            reqStr += request.body;
+        }
+
+        if (!write_all(*sock, reqStr)) {
+            pool_.erase(poolKey);
+            response.statusCode = 0;
+            response.statusText = "Write failed";
+            return response;
+        }
+
+        // Read status line
+        std::string statusLine = read_line(*sock, config_.readTimeoutMs);
+        if (statusLine.empty()) {
+            pool_.erase(poolKey);
+            response.statusCode = 0;
+            response.statusText = "No response";
+            return response;
+        }
+
+        // Parse status line
+        {
+            auto spacePos = statusLine.find(' ');
+            if (spacePos == std::string::npos) {
+                pool_.erase(poolKey);
+                response.statusCode = 0;
+                response.statusText = "Invalid status line";
+                return response;
+            }
+            auto rest = std::string_view(statusLine).substr(spacePos + 1);
+            auto spacePos2 = rest.find(' ');
+            if (spacePos2 != std::string_view::npos) {
+                auto codeStr = rest.substr(0, spacePos2);
+                response.statusCode = 0;
+                for (char c : codeStr) {
+                    if (c >= '0' && c <= '9') {
+                        response.statusCode = response.statusCode * 10 + (c - '0');
+                    }
+                }
+                response.statusText = std::string(rest.substr(spacePos2 + 1));
+            } else {
+                response.statusCode = 0;
+                for (char c : rest) {
+                    if (c >= '0' && c <= '9') {
+                        response.statusCode = response.statusCode * 10 + (c - '0');
+                    }
+                }
+            }
+        }
+
+        // Read headers
+        bool chunked = false;
+        bool connectionClose = false;
+
+        while (true) {
+            std::string headerLine = read_line(*sock, config_.readTimeoutMs);
+            if (headerLine.empty()) {
+                break;
+            }
+            auto colonPos = headerLine.find(':');
+            if (colonPos != std::string::npos) {
+                std::string key = headerLine.substr(0, colonPos);
+                std::string_view value = std::string_view(headerLine).substr(colonPos + 1);
+                while (!value.empty() && value[0] == ' ') {
+                    value = value.substr(1);
+                }
+                std::string valStr(value);
+                response.headers[key] = valStr;
+
+                if (iequals(key, "Transfer-Encoding") && iequals(valStr, "chunked")) {
+                    chunked = true;
+                }
+                if (iequals(key, "Connection") && iequals(valStr, "close")) {
+                    connectionClose = true;
+                }
+            }
+        }
+
+        // Stream body incrementally, feeding chunks to SseParser
+        SseParser parser;
+        bool stopped = false;
+
+        auto dispatch = [&](std::string_view data) -> bool {
+            auto events = parser.feed(data);
+            for (const auto& ev : events) {
+                if (!callback(ev)) {
+                    stopped = true;
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        if (chunked) {
+            // Incrementally decode chunked transfer-encoding
+            while (!stopped) {
+                std::string sizeLine = read_line(*sock, config_.readTimeoutMs);
+                auto semiPos = sizeLine.find(';');
+                if (semiPos != std::string::npos) {
+                    sizeLine = sizeLine.substr(0, semiPos);
+                }
+                while (!sizeLine.empty() && (sizeLine.back() == ' ' || sizeLine.back() == '\t')) {
+                    sizeLine.pop_back();
+                }
+
+                int chunkSize = parse_hex(sizeLine);
+                if (chunkSize == 0) {
+                    // Terminal chunk — read trailing \r\n
+                    read_line(*sock, config_.readTimeoutMs);
+                    break;
+                }
+
+                // Read chunk data
+                std::string chunkData(chunkSize, '\0');
+                if (!read_exact(*sock, chunkData.data(), chunkSize, config_.readTimeoutMs)) {
+                    break;
+                }
+                // Read trailing \r\n after chunk
+                read_line(*sock, config_.readTimeoutMs);
+
+                if (!dispatch(chunkData)) {
+                    break;
+                }
+            }
+        } else {
+            // Not chunked — read until connection closes
+            connectionClose = true;
+            char buf[4096];
+            while (!stopped) {
+                if (!sock->wait_readable(config_.readTimeoutMs)) {
+                    break;
+                }
+                int ret = sock->read(buf, sizeof(buf));
+                if (ret <= 0) break;
+                if (!dispatch(std::string_view(buf, static_cast<std::size_t>(ret)))) {
+                    break;
+                }
+            }
+        }
+
+        // Clean up connection
+        if (connectionClose || stopped) {
             sock->close();
             pool_.erase(poolKey);
         }
