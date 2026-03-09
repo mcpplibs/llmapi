@@ -1,0 +1,6 @@
+target("test_socket")
+    set_kind("binary")
+    set_languages("c++23")
+    set_policy("build.c++.modules", true)
+    add_files("test_socket.cpp")
+    add_deps("tinyhttps")
