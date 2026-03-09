@@ -2,6 +2,8 @@ export module mcpplibs.llmapi;
 
 export import :types;
 export import :url;
+export import :coro;
+export import :provider;
 export import :openai;
 
 import std;
