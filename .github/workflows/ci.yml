@@ -21,10 +21,7 @@ jobs:
           echo "$HOME/.xlings/subos/current/bin" >> "$GITHUB_PATH"
 
       - name: Install dependencies
-        run: xlings install
-
-      - name: Configure xmake
-        run: xmake f --toolchain=gcc --sdk="$HOME/.xlings/subos/default" -y -vvD
+        run: xlings install -g
 
       - name: Build
         run: xmake build -a -y -vvD
@@ -53,7 +50,7 @@ jobs:
           echo "$HOME/.xlings/subos/current/bin" >> "$GITHUB_PATH"
 
       - name: Install dependencies
-        run: xlings install
+        run: xlings install -g
 
       - name: Configure xmake
         run: xmake f --toolchain=llvm --sdk="$HOME/.xlings/data/xpkgs/xim-x-llvm/20.0.7" -y -vvD
@@ -86,7 +83,7 @@ jobs:
           echo "$env:USERPROFILE\.xlings\subos\current\bin" >> $env:GITHUB_PATH
 
       - name: Install dependencies
-        run: xlings install
+        run: xlings install -g
 
       - name: Build
         run: xmake build -a -y -vvD
