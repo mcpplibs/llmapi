@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Xlings
+        env:
+          XLINGS_NON_INTERACTIVE: 1
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/d2learn/xlings/main/tools/other/quick_install.sh | bash
+          echo "XLINGS_HOME=$HOME/.xlings" >> "$GITHUB_ENV"
+          echo "$HOME/.xlings/subos/current/bin" >> "$GITHUB_PATH"
+
+      - name: Install dependencies
+        run: xlings install
+
+      - name: Build
+        run: xmake build -a
+
+      - name: Test
+        run: |
+          xmake run test_types
+          xmake run test_serialization
+          xmake run test_coro
+          xmake run test_client
+          xmake run test_openai_serialize
+          xmake run test_anthropic_serialize
+          xmake run test_llmapi_integration
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Xlings
+        env:
+          XLINGS_NON_INTERACTIVE: 1
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/d2learn/xlings/main/tools/other/quick_install.sh | bash
+          echo "XLINGS_HOME=$HOME/.xlings" >> "$GITHUB_ENV"
+          echo "$HOME/.xlings/subos/current/bin" >> "$GITHUB_PATH"
+
+      - name: Install dependencies
+        run: xlings install
+
+      - name: Build
+        run: xmake build -a
+
+      - name: Test
+        run: |
+          xmake run test_types
+          xmake run test_serialization
+          xmake run test_coro
+          xmake run test_client
+          xmake run test_openai_serialize
+          xmake run test_anthropic_serialize
+          xmake run test_llmapi_integration
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Xlings
+        env:
+          XLINGS_NON_INTERACTIVE: "1"
+        shell: pwsh
+        run: |
+          irm https://raw.githubusercontent.com/d2learn/xlings/main/tools/other/quick_install.ps1 | iex
+          echo "XLINGS_HOME=$env:USERPROFILE\.xlings" >> $env:GITHUB_ENV
+          echo "$env:USERPROFILE\.xlings\subos\current\bin" >> $env:GITHUB_PATH
+
+      - name: Install dependencies
+        run: xlings install
+
+      - name: Build
+        run: xmake build -a
+
+      - name: Test
+        run: |
+          xmake run test_types
+          xmake run test_serialization
+          xmake run test_coro
+          xmake run test_client
+          xmake run test_openai_serialize
+          xmake run test_anthropic_serialize
+          xmake run test_llmapi_integration
