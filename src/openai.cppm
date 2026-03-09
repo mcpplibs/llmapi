@@ -1,323 +1,473 @@
 module;
 
-#include <curl/curl.h>
+#include <cassert>
 
 export module mcpplibs.llmapi:openai;
 
 export import :url;
 
-import std;
-
+import :types;
+import :coro;
+import mcpplibs.tinyhttps;
 import mcpplibs.llmapi.nlohmann.json;
+import std;
 
 export namespace mcpplibs::llmapi::openai {
 
 using Json = nlohmann::json;
 
-// Concept to constrain callback type
-template<typename F>
-concept StreamCallback = std::invocable<F, std::string_view> && 
-                        std::same_as<std::invoke_result_t<F, std::string_view>, void>;
+struct Config {
+    std::string apiKey;
+    std::string baseUrl { "https://api.openai.com/v1" };
+    std::string model;
+    std::string organization;
+    std::optional<std::string> proxy;
+    std::map<std::string, std::string> customHeaders;
+};
 
 class OpenAI {
-    std::string mApiKey;
-    std::string mBaseUrl;
-    std::string mModel;
-    std::string mEndpoint;
-    Json mMessages;
+private:
+    Config config_;
+    tinyhttps::HttpClient http_;
 
 public:
-    OpenAI(std::string_view apiKey, std::string_view baseUrl = llmapi::URL::OpenAI)
-        : mApiKey(apiKey), 
-        mBaseUrl(baseUrl),
-        mMessages(Json::array())
+    explicit OpenAI(Config config)
+        : config_(std::move(config))
+        , http_(tinyhttps::HttpClientConfig {
+            .proxy = config_.proxy,
+            .keepAlive = true,
+          })
     {
-        if (mApiKey.empty()) {
-            throw std::runtime_error("API key cannot be empty");
-        }
     }
 
-    // add safe check for const char* overload - example: std::getenv("KEY")
-    OpenAI(const char* apiKey, std::string_view baseUrl = llmapi::URL::OpenAI)
-        : OpenAI(std::string_view(apiKey ? apiKey : ""), baseUrl) { }
-
-    // Rule of five - explicitly defaulted
-    OpenAI(const OpenAI&) = default;
+    // Non-copyable (HttpClient owns TLS connections)
+    OpenAI(const OpenAI&) = delete;
+    OpenAI& operator=(const OpenAI&) = delete;
     OpenAI(OpenAI&&) = default;
-    OpenAI& operator=(const OpenAI&) = default;
     OpenAI& operator=(OpenAI&&) = default;
-    ~OpenAI() = default;
 
-public: // config methods (chainable)
+    // Provider concept
+    std::string_view name() const { return "openai"; }
 
-    OpenAI& model(std::string_view model) {
-        mEndpoint = mBaseUrl + "/chat/completions";
-        mModel = model;
-        return *this;
-    }
-
-public: // Message methods
-
-    // Add messages
-    OpenAI& add_message(std::string_view role, std::string_view content) {
-        mMessages.push_back({
-            {"role", role},
-            {"content", content}
-        });
-        return *this;
-    }
-
-    OpenAI& user(std::string_view content) {
-        return add_message("user", content);
-    }
-
-    OpenAI& system(std::string_view content) {
-        return add_message("system", content);
-    }
-
-    OpenAI& assistant(std::string_view content) {
-        return add_message("assistant", content);
-    }
-
-    // Clear conversation history
-    OpenAI& clear() {
-        mMessages = Json::array();
-        return *this;
-    }
-
-public:
-
-    // Getters
-    std::string_view getApiKey() const { return mApiKey; }
-    std::string_view getBaseUrl() const { return mBaseUrl; }
-    std::string_view getModel() const { return mModel; }
-
-    Json getMessages() const { return mMessages; }
-    int getMessageCount() const { return static_cast<int>(mMessages.size()) / 2; }
-
-    std::string getAnswer() const {
-        if (mMessages.empty()) return "";
-        const auto& lastMessage = mMessages.back();
-        if (lastMessage.contains("role") && lastMessage["role"] == "assistant" &&
-            lastMessage.contains("content")) {
-            return lastMessage["content"].get<std::string>();
+    ChatResponse chat(const std::vector<Message>& messages, const ChatParams& params) {
+        auto payload = build_payload_(messages, params, false);
+        auto request = build_request_("/chat/completions", payload);
+        auto response = http_.send(request);
+        if (!response.ok()) {
+            throw std::runtime_error("OpenAI API error: " +
+                std::to_string(response.statusCode) + " " + response.body);
         }
-        return "";
+        return parse_response_(Json::parse(response.body));
     }
 
-public: // Request methods
+    Task<ChatResponse> chat_async(const std::vector<Message>& messages, const ChatParams& params) {
+        co_return chat(messages, params);
+    }
 
-    // Execute request (non-streaming) - auto saves assistant reply
-    Json request() {
-        validate_request();
-        auto response = send_request(build_payload(mMessages, false));
-        
-        // Auto-save assistant reply to conversation history
-        if (response.contains("choices") && !response["choices"].empty()) {
-            auto& choice = response["choices"][0];
-            if (choice.contains("message") && choice["message"].contains("content")) {
-                std::string content = choice["message"]["content"];
-                assistant(content);
+    // StreamableProvider
+    ChatResponse chat_stream(const std::vector<Message>& messages, const ChatParams& params,
+                             std::function<void(std::string_view)> callback) {
+        auto payload = build_payload_(messages, params, true);
+        auto request = build_request_("/chat/completions", payload);
+
+        ChatResponse result;
+        std::string fullContent;
+        std::string currentToolId;
+        std::string currentToolName;
+        std::string currentToolArgs;
+        bool inToolCall = false;
+
+        auto sseResponse = http_.send_stream(request, [&](const tinyhttps::SseEvent& event) -> bool {
+            if (event.data == "[DONE]") {
+                return false;
             }
+            try {
+                auto chunk = Json::parse(event.data);
+                if (result.id.empty() && chunk.contains("id")) {
+                    result.id = chunk["id"].get<std::string>();
+                }
+                if (result.model.empty() && chunk.contains("model")) {
+                    result.model = chunk["model"].get<std::string>();
+                }
+                if (chunk.contains("choices") && !chunk["choices"].empty()) {
+                    const auto& choice = chunk["choices"][0];
+                    if (choice.contains("delta")) {
+                        const auto& delta = choice["delta"];
+                        if (delta.contains("content") && !delta["content"].is_null()) {
+                            std::string content = delta["content"].get<std::string>();
+                            fullContent += content;
+                            callback(content);
+                        }
+                        if (delta.contains("tool_calls")) {
+                            for (const auto& tc : delta["tool_calls"]) {
+                                if (tc.contains("id")) {
+                                    // New tool call starting — flush previous if any
+                                    if (inToolCall) {
+                                        result.content.push_back(ToolUseContent {
+                                            .id = currentToolId,
+                                            .name = currentToolName,
+                                            .inputJson = currentToolArgs,
+                                        });
+                                    }
+                                    currentToolId = tc["id"].get<std::string>();
+                                    currentToolName = tc.contains("function") && tc["function"].contains("name")
+                                        ? tc["function"]["name"].get<std::string>() : "";
+                                    currentToolArgs = tc.contains("function") && tc["function"].contains("arguments")
+                                        ? tc["function"]["arguments"].get<std::string>() : "";
+                                    inToolCall = true;
+                                } else {
+                                    // Continuation of existing tool call
+                                    if (tc.contains("function") && tc["function"].contains("arguments")) {
+                                        currentToolArgs += tc["function"]["arguments"].get<std::string>();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (choice.contains("finish_reason") && !choice["finish_reason"].is_null()) {
+                        result.stopReason = parse_stop_reason_(choice["finish_reason"].get<std::string>());
+                    }
+                }
+                if (chunk.contains("usage") && !chunk["usage"].is_null()) {
+                    const auto& usage = chunk["usage"];
+                    result.usage.inputTokens = usage.value("prompt_tokens", 0);
+                    result.usage.outputTokens = usage.value("completion_tokens", 0);
+                    result.usage.totalTokens = result.usage.inputTokens + result.usage.outputTokens;
+                }
+            } catch (const Json::exception&) {
+                // Skip malformed chunks
+            }
+            return true;
+        });
+
+        // Flush last tool call if any
+        if (inToolCall) {
+            result.content.push_back(ToolUseContent {
+                .id = currentToolId,
+                .name = currentToolName,
+                .inputJson = currentToolArgs,
+            });
         }
-        
-        return response;
+
+        // Add text content if present
+        if (!fullContent.empty()) {
+            result.content.insert(result.content.begin(), TextContent { .text = fullContent });
+        }
+
+        if (!sseResponse.ok()) {
+            throw std::runtime_error("OpenAI API stream error: " +
+                std::to_string(sseResponse.statusCode) + " " + sseResponse.statusText);
+        }
+
+        return result;
     }
 
-    // One-shot request without building conversation (non-streaming)
-    Json request(const Json& messages) {
-        validate_request();
-        return send_request(build_payload(messages, false));
+    Task<ChatResponse> chat_stream_async(const std::vector<Message>& messages, const ChatParams& params,
+                                          std::function<void(std::string_view)> callback) {
+        co_return chat_stream(messages, params, std::move(callback));
     }
 
-    // Execute request with callback (streaming) - auto saves assistant reply
-    template<StreamCallback Callback>
-    void request(Callback&& callback) {
-        validate_request();
-        
-        // Wrapper to collect full response
-        std::string full_response;
-        auto wrapper_callback = [&full_response, &callback](std::string_view chunk) {
-            full_response += chunk;
-            callback(chunk);
-        };
-        
-        send_stream_request(build_payload(mMessages, true), wrapper_callback);
-        
-        // Auto-save assistant reply to conversation history
-        if (!full_response.empty()) {
-            assistant(full_response);
+    // EmbeddableProvider
+    EmbeddingResponse embed(const std::vector<std::string>& inputs, std::string_view model) {
+        Json payload;
+        payload["model"] = std::string(model);
+        payload["input"] = inputs;
+
+        auto request = build_request_("/embeddings", payload);
+        auto response = http_.send(request);
+        if (!response.ok()) {
+            throw std::runtime_error("OpenAI embeddings error: " +
+                std::to_string(response.statusCode) + " " + response.body);
         }
+
+        auto json = Json::parse(response.body);
+        EmbeddingResponse result;
+        result.model = json.value("model", std::string(model));
+
+        for (const auto& item : json["data"]) {
+            std::vector<float> vec;
+            for (const auto& val : item["embedding"]) {
+                vec.push_back(val.get<float>());
+            }
+            result.embeddings.push_back(std::move(vec));
+        }
+
+        if (json.contains("usage")) {
+            result.usage.inputTokens = json["usage"].value("prompt_tokens", 0);
+            result.usage.totalTokens = json["usage"].value("total_tokens", 0);
+        }
+
+        return result;
     }
 
 private:
-    struct StreamContext {
-        std::function<void(std::string_view)> callback;
-        std::string buffer;
-    };
-
-    // Validate request preconditions
-    void validate_request() const {
-        if (mEndpoint.empty()) {
-            throw std::runtime_error("Endpoint not set. Call model() first.");
+    // Serialization
+    Json serialize_messages_(const std::vector<Message>& messages) const {
+        Json arr = Json::array();
+        for (const auto& msg : messages) {
+            arr.push_back(serialize_message_(msg));
         }
-        if (mModel.empty()) {
-            throw std::runtime_error("Model not set.");
-        }
+        return arr;
     }
 
-    // Build request payload
-    Json build_payload(const Json& messages, bool stream) const {
+    Json serialize_message_(const Message& msg) const {
+        Json j;
+        j["role"] = role_string_(msg.role);
+
+        std::visit([&](const auto& c) {
+            using T = std::decay_t<decltype(c)>;
+            if constexpr (std::is_same_v<T, std::string>) {
+                j["content"] = c;
+            } else {
+                // vector<ContentPart>
+                Json parts = Json::array();
+                for (const auto& part : c) {
+                    std::visit([&](const auto& p) {
+                        using P = std::decay_t<decltype(p)>;
+                        if constexpr (std::is_same_v<P, TextContent>) {
+                            parts.push_back(Json{{"type", "text"}, {"text", p.text}});
+                        } else if constexpr (std::is_same_v<P, ImageContent>) {
+                            Json imgUrl;
+                            if (p.isUrl) {
+                                imgUrl["url"] = p.data;
+                            } else {
+                                imgUrl["url"] = "data:" + p.mediaType + ";base64," + p.data;
+                            }
+                            parts.push_back(Json{{"type", "image_url"}, {"image_url", imgUrl}});
+                        } else if constexpr (std::is_same_v<P, ToolUseContent>) {
+                            // Tool use in assistant messages — handled via tool_calls field
+                        } else if constexpr (std::is_same_v<P, ToolResultContent>) {
+                            // Tool results go as separate role=tool messages
+                        }
+                    }, part);
+                }
+                if (!parts.empty()) {
+                    j["content"] = parts;
+                }
+            }
+        }, msg.content);
+
+        // Handle tool role: add tool_call_id
+        if (msg.role == Role::Tool) {
+            // Try to extract tool_call_id from ToolResultContent
+            if (auto* parts = std::get_if<std::vector<ContentPart>>(&msg.content)) {
+                for (const auto& part : *parts) {
+                    if (auto* tr = std::get_if<ToolResultContent>(&part)) {
+                        j["tool_call_id"] = tr->toolUseId;
+                        j["content"] = tr->content;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Handle assistant messages with tool_calls
+        if (msg.role == Role::Assistant) {
+            if (auto* parts = std::get_if<std::vector<ContentPart>>(&msg.content)) {
+                Json toolCalls = Json::array();
+                std::string textContent;
+                for (const auto& part : *parts) {
+                    if (auto* tu = std::get_if<ToolUseContent>(&part)) {
+                        Json tc;
+                        tc["id"] = tu->id;
+                        tc["type"] = "function";
+                        tc["function"] = Json{
+                            {"name", tu->name},
+                            {"arguments", tu->inputJson},
+                        };
+                        toolCalls.push_back(tc);
+                    } else if (auto* t = std::get_if<TextContent>(&part)) {
+                        textContent += t->text;
+                    }
+                }
+                if (!toolCalls.empty()) {
+                    j["tool_calls"] = toolCalls;
+                }
+                if (!textContent.empty()) {
+                    j["content"] = textContent;
+                } else if (toolCalls.empty()) {
+                    // Keep array content if no special handling needed
+                } else {
+                    j["content"] = nullptr;
+                }
+            }
+        }
+
+        return j;
+    }
+
+    Json build_payload_(const std::vector<Message>& messages, const ChatParams& params, bool stream) const {
         Json payload;
-        payload["model"] = mModel;
-        payload["messages"] = messages;
+        payload["model"] = config_.model;
+        payload["messages"] = serialize_messages_(messages);
+
         if (stream) {
             payload["stream"] = true;
         }
+
+        if (params.temperature.has_value()) {
+            payload["temperature"] = *params.temperature;
+        }
+        if (params.topP.has_value()) {
+            payload["top_p"] = *params.topP;
+        }
+        if (params.maxTokens.has_value()) {
+            payload["max_completion_tokens"] = *params.maxTokens;
+        }
+        if (params.stop.has_value()) {
+            payload["stop"] = *params.stop;
+        }
+
+        // Tools
+        if (params.tools.has_value() && !params.tools->empty()) {
+            Json tools = Json::array();
+            for (const auto& tool : *params.tools) {
+                Json t;
+                t["type"] = "function";
+                t["function"] = Json{
+                    {"name", tool.name},
+                    {"description", tool.description},
+                };
+                if (!tool.inputSchema.empty()) {
+                    t["function"]["parameters"] = Json::parse(tool.inputSchema);
+                }
+                tools.push_back(t);
+            }
+            payload["tools"] = tools;
+        }
+
+        // Tool choice
+        if (params.toolChoice.has_value()) {
+            std::visit([&](const auto& tc) {
+                using T = std::decay_t<decltype(tc)>;
+                if constexpr (std::is_same_v<T, ToolChoice>) {
+                    switch (tc) {
+                        case ToolChoice::Auto: payload["tool_choice"] = "auto"; break;
+                        case ToolChoice::None: payload["tool_choice"] = "none"; break;
+                        case ToolChoice::Required: payload["tool_choice"] = "required"; break;
+                    }
+                } else if constexpr (std::is_same_v<T, ToolChoiceForced>) {
+                    payload["tool_choice"] = Json{
+                        {"type", "function"},
+                        {"function", Json{{"name", tc.name}}},
+                    };
+                }
+            }, *params.toolChoice);
+        }
+
+        // Response format
+        if (params.responseFormat.has_value()) {
+            const auto& rf = *params.responseFormat;
+            switch (rf.type) {
+                case ResponseFormatType::Text:
+                    payload["response_format"] = Json{{"type", "text"}};
+                    break;
+                case ResponseFormatType::JsonObject:
+                    payload["response_format"] = Json{{"type", "json_object"}};
+                    break;
+                case ResponseFormatType::JsonSchema: {
+                    Json schemaObj;
+                    schemaObj["type"] = "json_schema";
+                    Json jsonSchema;
+                    jsonSchema["name"] = rf.schemaName;
+                    if (!rf.schema.empty()) {
+                        jsonSchema["schema"] = Json::parse(rf.schema);
+                    }
+                    schemaObj["json_schema"] = jsonSchema;
+                    payload["response_format"] = schemaObj;
+                    break;
+                }
+            }
+        }
+
+        // Extra JSON merge
+        if (params.extraJson.has_value() && !params.extraJson->empty()) {
+            auto extra = Json::parse(*params.extraJson);
+            payload.merge_patch(extra);
+        }
+
         return payload;
     }
 
-    // Setup common CURL headers
-    struct curl_slist* setup_headers() const {
-        struct curl_slist* headers = nullptr;
-        headers = curl_slist_append(headers, "Content-Type: application/json");
-        std::string authHeader = "Authorization: Bearer " + mApiKey;
-        headers = curl_slist_append(headers, authHeader.c_str());
-        return headers;
-    }
+    // Deserialization
+    ChatResponse parse_response_(const Json& json) const {
+        ChatResponse result;
 
-    Json send_request(const Json& payload) {
-        std::string payloadStr = payload.dump();
-        std::string response;
+        result.id = json.value("id", "");
+        result.model = json.value("model", "");
 
-        CURL* curl = curl_easy_init();
-        if (!curl) {
-            throw std::runtime_error("Failed to initialize CURL");
-        }
-
-        // Set up headers
-        struct curl_slist* headers = setup_headers();
-
-        // Set CURL options
-        curl_easy_setopt(curl, CURLOPT_URL, mEndpoint.c_str());
-        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payloadStr.c_str());
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-
-        // Perform the request
-        CURLcode res = curl_easy_perform(curl);
-        
-        // Cleanup
-        curl_slist_free_all(headers);
-        curl_easy_cleanup(curl);
-
-        if (res != CURLE_OK) {
-            throw std::runtime_error(std::string("CURL error: ") + curl_easy_strerror(res));
-        }
-
-        return Json::parse(response);
-    }
-
-    template<StreamCallback Callback>
-    void send_stream_request(const Json& payload, Callback&& callback) {
-        std::string payloadStr = payload.dump();
-
-        CURL* curl = curl_easy_init();
-        if (!curl) {
-            throw std::runtime_error("Failed to initialize CURL");
-        }
-
-        StreamContext context;
-        context.callback = std::forward<Callback>(callback);
-
-        // Set up headers
-        struct curl_slist* headers = setup_headers();
-
-        // Set CURL options
-        curl_easy_setopt(curl, CURLOPT_URL, mEndpoint.c_str());
-        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payloadStr.c_str());
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, streamCallback);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &context);
-
-        // Perform the request
-        CURLcode res = curl_easy_perform(curl);
-        
-        // Cleanup
-        curl_slist_free_all(headers);
-        curl_easy_cleanup(curl);
-
-        if (res != CURLE_OK) {
-            throw std::runtime_error(std::string("CURL error: ") + curl_easy_strerror(res));
-        }
-    }
-
-    static size_t writeCallback(void* contents, size_t size, size_t nmemb, void* userp) {
-        size_t totalSize = size * nmemb;
-        std::string* response = static_cast<std::string*>(userp);
-        response->append(static_cast<char*>(contents), totalSize);
-        return totalSize;
-    }
-
-    static size_t streamCallback(void* contents, size_t size, size_t nmemb, void* userp) {
-        size_t totalSize = size * nmemb;
-        StreamContext* context = static_cast<StreamContext*>(userp);
-        
-        std::string_view data(static_cast<char*>(contents), totalSize);
-        context->buffer.append(data);
-
-        // Process SSE data line by line
-        size_t pos = 0;
-        while ((pos = context->buffer.find('\n')) != std::string::npos) {
-            std::string line = context->buffer.substr(0, pos);
-            context->buffer.erase(0, pos + 1);
-
-            // Remove \r if present
-            if (!line.empty() && line.back() == '\r') {
-                line.pop_back();
-            }
-
-            // Skip empty lines
-            if (line.empty()) {
-                continue;
-            }
-
-            // Check for data: prefix
-            if (line.starts_with("data: ")) {
-                std::string jsonStr = line.substr(6);
-                
-                // Check for [DONE] message
-                if (jsonStr == "[DONE]") {
-                    continue;
+        if (json.contains("choices") && !json["choices"].empty()) {
+            const auto& choice = json["choices"][0];
+            if (choice.contains("message")) {
+                const auto& msg = choice["message"];
+                if (msg.contains("content") && !msg["content"].is_null()) {
+                    result.content.push_back(TextContent {
+                        .text = msg["content"].get<std::string>(),
+                    });
                 }
-
-                try {
-                    auto chunk = Json::parse(jsonStr);
-                    
-                    // Extract content from the chunk
-                    if (chunk.contains("choices") && !chunk["choices"].empty()) {
-                        auto& choice = chunk["choices"][0];
-                        
-                        // For chat completions streaming
-                        if (choice.contains("delta") && choice["delta"].contains("content")) {
-                            std::string content = choice["delta"]["content"];
-                            context->callback(content);
-                        }
-                        // For responses endpoint streaming
-                        else if (choice.contains("message") && choice["message"].contains("content")) {
-                            std::string content = choice["message"]["content"];
-                            context->callback(content);
-                        }
+                if (msg.contains("tool_calls")) {
+                    for (const auto& tc : msg["tool_calls"]) {
+                        result.content.push_back(ToolUseContent {
+                            .id = tc.value("id", ""),
+                            .name = tc["function"].value("name", ""),
+                            .inputJson = tc["function"].value("arguments", ""),
+                        });
                     }
-                } catch (const Json::exception& e) {
-                    // Silently ignore JSON parsing errors in streaming
                 }
+            }
+            if (choice.contains("finish_reason") && !choice["finish_reason"].is_null()) {
+                result.stopReason = parse_stop_reason_(choice["finish_reason"].get<std::string>());
             }
         }
 
-        return totalSize;
+        if (json.contains("usage")) {
+            const auto& usage = json["usage"];
+            result.usage.inputTokens = usage.value("prompt_tokens", 0);
+            result.usage.outputTokens = usage.value("completion_tokens", 0);
+            result.usage.totalTokens = result.usage.inputTokens + result.usage.outputTokens;
+        }
+
+        return result;
+    }
+
+    static StopReason parse_stop_reason_(const std::string& reason) {
+        if (reason == "stop") return StopReason::EndOfTurn;
+        if (reason == "length") return StopReason::MaxTokens;
+        if (reason == "tool_calls") return StopReason::ToolUse;
+        if (reason == "content_filter") return StopReason::ContentFilter;
+        return StopReason::EndOfTurn;
+    }
+
+    static std::string role_string_(Role role) {
+        switch (role) {
+            case Role::System: return "system";
+            case Role::User: return "user";
+            case Role::Assistant: return "assistant";
+            case Role::Tool: return "tool";
+        }
+        return "user";
+    }
+
+    // HTTP helpers
+    tinyhttps::HttpRequest build_request_(std::string_view endpoint, const Json& payload) const {
+        tinyhttps::HttpRequest req;
+        req.method = tinyhttps::Method::POST;
+        req.url = config_.baseUrl + std::string(endpoint);
+        req.body = payload.dump();
+
+        req.headers["Content-Type"] = "application/json";
+        req.headers["Authorization"] = "Bearer " + config_.apiKey;
+
+        if (!config_.organization.empty()) {
+            req.headers["OpenAI-Organization"] = config_.organization;
+        }
+
+        for (const auto& [key, value] : config_.customHeaders) {
+            req.headers[key] = value;
+        }
+
+        return req;
     }
 };
 
-} // namespace mcpplibs::openai
+} // namespace mcpplibs::llmapi::openai

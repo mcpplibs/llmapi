@@ -224,6 +224,12 @@ public:
 
     ~HttpClient() = default;
 
+    // Non-copyable (connection pool owns TLS sockets)
+    HttpClient(const HttpClient&) = delete;
+    HttpClient& operator=(const HttpClient&) = delete;
+    HttpClient(HttpClient&&) = default;
+    HttpClient& operator=(HttpClient&&) = default;
+
     HttpResponse send(const HttpRequest& request) {
         HttpResponse response;
 

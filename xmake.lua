@@ -1,6 +1,5 @@
 --add_rules("mode.debug", "mode.release")
 
-add_requires("libcurl 8.11.0")
 add_requires("mbedtls 3.6.1")
 
 --includes("src/json")
@@ -11,7 +10,7 @@ target("llmapi")
     --set_kind("moduleonly") -- link failed issue when other lib reference llmapi
     set_kind("static")
     add_files("src/*.cppm", { public = true, install = true })
-    add_packages("libcurl")
+    add_deps("tinyhttps")
     --add_deps("__nlohmann_json")
     add_includedirs("src/json")
     add_headerfiles("src/json/json.hpp")
