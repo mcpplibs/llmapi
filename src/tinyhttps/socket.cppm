@@ -149,6 +149,10 @@ public:
         return poll_fd(fd_, timeoutMs, false);
     }
 
+    [[nodiscard]] SocketHandle native_handle() const {
+        return fd_;
+    }
+
     void close() {
         if (is_valid()) {
             close_handle(fd_);

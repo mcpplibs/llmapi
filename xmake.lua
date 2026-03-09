@@ -1,6 +1,7 @@
 --add_rules("mode.debug", "mode.release")
 
 add_requires("libcurl 8.11.0")
+add_requires("mbedtls 3.6.1")
 
 --includes("src/json")
 
@@ -21,6 +22,7 @@ target("tinyhttps")
     set_languages("c++23")
     set_policy("build.c++.modules", true)
     add_files("src/tinyhttps/*.cppm", { public = true })
+    add_packages("mbedtls")
 
 includes("examples")
 includes("tests")
