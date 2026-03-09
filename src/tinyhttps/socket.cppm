@@ -22,10 +22,10 @@ namespace mcpplibs::tinyhttps {
 
 #ifdef _WIN32
 using SocketHandle = SOCKET;
-constexpr SocketHandle kInvalidSocket = INVALID_SOCKET;
+constexpr SocketHandle INVALID_SOCKET_FD = INVALID_SOCKET;
 #else
 using SocketHandle = int;
-constexpr SocketHandle kInvalidSocket = -1;
+constexpr SocketHandle INVALID_SOCKET_FD = -1;
 #endif
 
 export class Socket {
@@ -43,7 +43,7 @@ public:
     // Move constructor
     Socket(Socket&& other) noexcept
         : fd_(other.fd_) {
-        other.fd_ = kInvalidSocket;
+        other.fd_ = INVALID_SOCKET_FD;
     }
 
     // Move assignment
@@ -51,16 +51,21 @@ public:
         if (this != &other) {
             close();
             fd_ = other.fd_;
-            other.fd_ = kInvalidSocket;
+            other.fd_ = INVALID_SOCKET_FD;
         }
         return *this;
     }
 
     [[nodiscard]] bool is_valid() const {
-        return fd_ != kInvalidSocket;
+        return fd_ != INVALID_SOCKET_FD;
     }
 
     bool connect(const char* host, int port, int timeoutMs) {
+        // Close existing connection if any
+        if (is_valid()) {
+            close();
+        }
+
         // Resolve address
         struct addrinfo hints{};
         hints.ai_family = AF_UNSPEC;
@@ -77,7 +82,7 @@ public:
         // Try each address
         for (auto* rp = result; rp != nullptr; rp = rp->ai_next) {
             SocketHandle fd = ::socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-            if (fd == kInvalidSocket) {
+            if (fd == INVALID_SOCKET_FD) {
                 continue;
             }
 
@@ -147,7 +152,7 @@ public:
     void close() {
         if (is_valid()) {
             close_handle(fd_);
-            fd_ = kInvalidSocket;
+            fd_ = INVALID_SOCKET_FD;
         }
     }
 
@@ -165,7 +170,7 @@ public:
     }
 
 private:
-    SocketHandle fd_ = kInvalidSocket;
+    SocketHandle fd_ = INVALID_SOCKET_FD;
 
     static bool set_non_blocking(SocketHandle fd, bool nonBlocking) {
 #ifdef _WIN32
@@ -188,12 +193,14 @@ private:
         WSAPOLLFD pfd{};
         pfd.fd = fd;
         pfd.events = forRead ? POLLIN : POLLOUT;
-        return WSAPoll(&pfd, 1, timeoutMs) > 0 && (pfd.revents & pfd.events);
+        int ret = WSAPoll(&pfd, 1, timeoutMs);
+        return ret > 0 && (pfd.revents & (pfd.events | POLLERR | POLLHUP));
 #else
         struct pollfd pfd{};
         pfd.fd = fd;
         pfd.events = forRead ? POLLIN : POLLOUT;
-        return ::poll(&pfd, 1, timeoutMs) > 0 && (pfd.revents & pfd.events);
+        int ret = ::poll(&pfd, 1, timeoutMs);
+        return ret > 0 && (pfd.revents & (pfd.events | POLLERR | POLLHUP));
 #endif
     }
 
