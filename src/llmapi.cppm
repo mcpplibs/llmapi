@@ -1,5 +1,6 @@
 export module mcpplibs.llmapi;
 
+export import :types;
 export import :url;
 export import :openai;
 
