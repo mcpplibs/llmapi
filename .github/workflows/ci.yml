@@ -24,17 +24,17 @@ jobs:
         run: xlings install
 
       - name: Build
-        run: xmake build -a -y
+        run: xmake build -a -y -vvD
 
       - name: Test
         run: |
-          xmake run test_types -y
-          xmake run test_serialization -y
-          xmake run test_coro -y
-          xmake run test_client -y
-          xmake run test_openai_serialize -y
-          xmake run test_anthropic_serialize -y
-          xmake run test_llmapi_integration -y
+          xmake run test_types -y -vvD
+          xmake run test_serialization -y -vvD
+          xmake run test_coro -y -vvD
+          xmake run test_client -y -vvD
+          xmake run test_openai_serialize -y -vvD
+          xmake run test_anthropic_serialize -y -vvD
+          xmake run test_llmapi_integration -y -vvD
 
   build-macos:
     runs-on: macos-latest
@@ -53,17 +53,17 @@ jobs:
         run: xlings install
 
       - name: Build
-        run: xmake build -a -y
+        run: xmake build -a -y -vvD
 
       - name: Test
         run: |
-          xmake run test_types -y
-          xmake run test_serialization -y
-          xmake run test_coro -y
-          xmake run test_client -y
-          xmake run test_openai_serialize -y
-          xmake run test_anthropic_serialize -y
-          xmake run test_llmapi_integration -y
+          xmake run test_types -y -vvD
+          xmake run test_serialization -y -vvD
+          xmake run test_coro -y -vvD
+          xmake run test_client -y -vvD
+          xmake run test_openai_serialize -y -vvD
+          xmake run test_anthropic_serialize -y -vvD
+          xmake run test_llmapi_integration -y -vvD
 
   build-windows:
     runs-on: windows-latest
@@ -83,14 +83,14 @@ jobs:
         run: xlings install
 
       - name: Build
-        run: xmake build -a -y
+        run: xmake build -a -y -vvD
 
       - name: Test
         run: |
-          xmake run test_types -y
-          xmake run test_serialization -y
-          xmake run test_coro -y
-          xmake run test_client -y
-          xmake run test_openai_serialize -y
-          xmake run test_anthropic_serialize -y
-          xmake run test_llmapi_integration -y
+          xmake run test_types -y -vvD
+          xmake run test_serialization -y -vvD
+          xmake run test_coro -y -vvD
+          xmake run test_client -y -vvD
+          xmake run test_openai_serialize -y -vvD
+          xmake run test_anthropic_serialize -y -vvD
+          xmake run test_llmapi_integration -y -vvD
