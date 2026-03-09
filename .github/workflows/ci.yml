@@ -23,6 +23,9 @@ jobs:
       - name: Install dependencies
         run: xlings install
 
+      - name: Configure xmake
+        run: xmake f --toolchain=llvm --sdk="$HOME/.xlings/data/xpkgs/xim-x-llvm/20.0.7" -y -vvD
+
       - name: Build
         run: xmake build -a -y -vvD
 
