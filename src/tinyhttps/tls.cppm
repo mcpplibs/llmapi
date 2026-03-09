@@ -223,6 +223,10 @@ public:
     }
 
     bool wait_readable(int timeoutMs) {
+        // Check if mbedtls has already buffered decrypted data
+        if (state_ && mbedtls_ssl_get_bytes_avail(&state_->ssl) > 0) {
+            return true;
+        }
         return socket_.wait_readable(timeoutMs);
     }
 

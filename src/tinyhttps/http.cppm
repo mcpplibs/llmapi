@@ -90,6 +90,24 @@ static ParsedUrl parse_url(std::string_view url) {
     return result;
 }
 
+// Check if user headers contain a key (case-insensitive)
+static bool has_header(const std::map<std::string, std::string>& headers, std::string_view key) {
+    for (const auto& [k, v] : headers) {
+        if (k.size() == key.size()) {
+            bool match = true;
+            for (std::size_t i = 0; i < k.size(); ++i) {
+                if (std::tolower(static_cast<unsigned char>(k[i])) !=
+                    std::tolower(static_cast<unsigned char>(key[i]))) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) return true;
+        }
+    }
+    return false;
+}
+
 static std::string_view method_to_string(Method m) {
     switch (m) {
         case Method::GET:     return "GET";
@@ -237,16 +255,19 @@ public:
         reqStr += " ";
         reqStr += parsed.path;
         reqStr += " HTTP/1.1\r\n";
-        reqStr += "Host: ";
-        reqStr += parsed.host;
-        if (parsed.port != 443) {
-            reqStr += ":";
-            reqStr += std::to_string(parsed.port);
+        // Add Host header (skip if user provided)
+        if (!has_header(request.headers, "Host")) {
+            reqStr += "Host: ";
+            reqStr += parsed.host;
+            if (parsed.port != 443) {
+                reqStr += ":";
+                reqStr += std::to_string(parsed.port);
+            }
+            reqStr += "\r\n";
         }
-        reqStr += "\r\n";
 
-        // Add Content-Length if body present
-        if (!request.body.empty()) {
+        // Add Content-Length if body present (skip if user provided)
+        if (!request.body.empty() && !has_header(request.headers, "Content-Length")) {
             reqStr += "Content-Length: ";
             reqStr += std::to_string(request.body.size());
             reqStr += "\r\n";
@@ -260,11 +281,13 @@ public:
             reqStr += "\r\n";
         }
 
-        // Add connection header
-        if (config_.keepAlive) {
-            reqStr += "Connection: keep-alive\r\n";
-        } else {
-            reqStr += "Connection: close\r\n";
+        // Add connection header (skip if user provided)
+        if (!has_header(request.headers, "Connection")) {
+            if (config_.keepAlive) {
+                reqStr += "Connection: keep-alive\r\n";
+            } else {
+                reqStr += "Connection: close\r\n";
+            }
         }
 
         reqStr += "\r\n";
