@@ -1,19 +1,23 @@
 // Minimal example - simplest way to use llmapi
-import std;
 import mcpplibs.llmapi;
+import std;
+
+using namespace mcpplibs::llmapi;
 
 int main() {
-    using namespace mcpplibs;
-    
-    llmapi::Client client(std::getenv("OPENAI_API_KEY"), llmapi::URL::Poe);
+    auto apiKey = std::getenv("OPENAI_API_KEY");
+    if (!apiKey) {
+        std::println("Error: OPENAI_API_KEY not set");
+        return 1;
+    }
 
-    client.model("gpt-5")
-          .system("You are a helpful assistant.")
-          .user("In one sentence, introduce modern C++. 并给出中文翻译")
-          .request([](std::string_view chunk) {
-                std::print("{}", chunk);
-                std::cout.flush();
-          });
+    auto client = Client(openai::OpenAI({
+        .apiKey = apiKey,
+        .model = "gpt-4o-mini",
+    }));
+
+    auto resp = client.chat("Hello! In one sentence, introduce modern C++.");
+    std::println("{}", resp.text());
 
     return 0;
 }

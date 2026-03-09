@@ -7,6 +7,7 @@ export import :provider;
 export import :client;
 export import :openai;
 export import :anthropic;
+export import :errors;
 
 import std;
 
