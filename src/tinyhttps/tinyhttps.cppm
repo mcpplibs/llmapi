@@ -3,3 +3,4 @@ export import :socket;
 export import :ca_bundle;
 export import :tls;
 export import :http;
+export import :sse;
