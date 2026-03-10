@@ -53,10 +53,10 @@ int main() {
         return 1;
     }
 
-    auto client = Client(openai::OpenAI({
+    auto client = Client(Config{
         .apiKey = apiKey,
         .model = "gpt-4o-mini",
-    }));
+    });
 
     client.system("You are a helpful assistant.");
     auto resp = client.chat("Hello, introduce yourself in one sentence.");
@@ -88,10 +88,10 @@ export DEEPSEEK_API_KEY="..."
 OpenAI:
 
 ```cpp
-auto client = Client(openai::OpenAI({
+auto client = Client(Config{
     .apiKey = std::getenv("OPENAI_API_KEY"),
     .model = "gpt-4o-mini",
-}));
+});
 ```
 
 Anthropic:
@@ -106,11 +106,11 @@ auto client = Client(anthropic::Anthropic({
 Compatible endpoint through the OpenAI provider:
 
 ```cpp
-auto client = Client(openai::OpenAI({
+auto client = Client(Config{
     .apiKey = std::getenv("DEEPSEEK_API_KEY"),
     .baseUrl = std::string(URL::DeepSeek),
     .model = "deepseek-chat",
-}));
+});
 ```
 
 ## Next Steps

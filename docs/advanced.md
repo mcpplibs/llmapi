@@ -7,19 +7,19 @@ Advanced patterns using the current API surface.
 Each `chat()` and `chat_stream()` call appends the user message and the assistant response to the in-memory `Conversation`.
 
 ```cpp
-auto client = Client(openai::OpenAI({
+auto client = Client(Config{
     .apiKey = std::getenv("OPENAI_API_KEY"),
     .model = "gpt-4o-mini",
-}));
+});
 
 client.system("You are helpful.");
 client.chat("Remember that I prefer concise answers.");
 client.save_conversation("session.json");
 
-auto restored = Client(openai::OpenAI({
+auto restored = Client(Config{
     .apiKey = std::getenv("OPENAI_API_KEY"),
     .model = "gpt-4o-mini",
-}));
+});
 restored.load_conversation("session.json");
 ```
 

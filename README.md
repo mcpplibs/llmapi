@@ -11,7 +11,7 @@
 |:---:|
 | [Documentation](docs/) - [C++ API](docs/cpp-api.md) - [Examples](docs/examples.md) |
 
-`llmapi` provides a typed `Client<Provider>` API for chat, streaming, embeddings, tool calls, and conversation persistence. The repository ships built-in providers for OpenAI and Anthropic, and the OpenAI provider can target compatible endpoints through a custom `baseUrl`.
+`llmapi` provides a typed `Client<Provider>` API for chat, streaming, embeddings, tool calls, and conversation persistence. The default config alias `Config` maps to OpenAI-style providers, so the common case does not need an explicit `openai::OpenAI` wrapper.
 
 ## Features
 
@@ -37,10 +37,10 @@ int main() {
         return 1;
     }
 
-    auto client = Client(openai::OpenAI({
+    auto client = Client(Config{
         .apiKey = apiKey,
         .model = "gpt-4o-mini",
-    }));
+    });
 
     client.system("You are a concise assistant.");
     auto resp = client.chat("Explain why C++23 modules are useful in two sentences.");
@@ -54,6 +54,7 @@ int main() {
 
 - `openai::OpenAI` for OpenAI chat, streaming, embeddings, and OpenAI-compatible endpoints
 - `anthropic::Anthropic` for Anthropic chat and streaming
+- `Config` as a convenient alias for `openai::Config`
 
 Compatible endpoints can reuse the OpenAI provider:
 

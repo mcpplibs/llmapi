@@ -26,10 +26,10 @@ int main() {
     assert(provider.name() == "openai");
 
     // Test 3: Client<OpenAI> compiles
-    auto client = Client(openai::OpenAI({
+    auto client = Client(Config{
         .apiKey = "test",
         .model = "gpt-4o",
-    }));
+    });
 
     // Test 4: provider() access
     assert(client.provider().name() == "openai");

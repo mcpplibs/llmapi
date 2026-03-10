@@ -13,10 +13,10 @@ int main() {
         return 1;
     }
 
-    auto client = Client(openai::OpenAI({
+    auto client = Client(Config{
         .apiKey = apiKey,
         .model = "gpt-4o-mini",
-    }));
+    });
     client.system("You are a helpful assistant.");
 
     println("=== llmapi Basic Usage Demo ===");

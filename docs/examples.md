@@ -11,10 +11,10 @@ import std;
 int main() {
     using namespace mcpplibs::llmapi;
 
-    auto client = Client(openai::OpenAI({
+    auto client = Client(Config{
         .apiKey = std::getenv("OPENAI_API_KEY"),
         .model = "gpt-4o-mini",
-    }));
+    });
 
     client.system("You are a helpful assistant.");
     auto resp = client.chat("In one sentence, explain C++23 modules.");
@@ -31,10 +31,10 @@ import std;
 int main() {
     using namespace mcpplibs::llmapi;
 
-    auto client = Client(openai::OpenAI({
+    auto client = Client(Config{
         .apiKey = std::getenv("OPENAI_API_KEY"),
         .model = "gpt-4o-mini",
-    }));
+    });
 
     std::string streamed;
     client.chat_stream("Write a 3-line poem about templates.", [&](std::string_view chunk) {
@@ -54,10 +54,10 @@ import std;
 int main() {
     using namespace mcpplibs::llmapi;
 
-    auto client = Client(openai::OpenAI({
+    auto client = Client(Config{
         .apiKey = std::getenv("OPENAI_API_KEY"),
         .model = "gpt-4o-mini",
-    }));
+    });
 
     client.system("Reply briefly.");
 
@@ -79,18 +79,18 @@ import std;
 int main() {
     using namespace mcpplibs::llmapi;
 
-    auto client = Client(openai::OpenAI({
+    auto client = Client(Config{
         .apiKey = std::getenv("OPENAI_API_KEY"),
         .model = "gpt-4o-mini",
-    }));
+    });
 
     client.chat("Remember that my favorite language is C++.");
     client.save_conversation("conversation.json");
 
-    auto restored = Client(openai::OpenAI({
+    auto restored = Client(Config{
         .apiKey = std::getenv("OPENAI_API_KEY"),
         .model = "gpt-4o-mini",
-    }));
+    });
     restored.load_conversation("conversation.json");
 
     auto resp = restored.chat("What language do I like?");
@@ -107,10 +107,10 @@ import std;
 int main() {
     using namespace mcpplibs::llmapi;
 
-    auto client = Client(openai::OpenAI({
+    auto client = Client(Config{
         .apiKey = std::getenv("OPENAI_API_KEY"),
         .model = "gpt-4o-mini",
-    }));
+    });
 
     auto params = ChatParams{
         .tools = std::vector<ToolDef>{{
@@ -137,10 +137,10 @@ import std;
 int main() {
     using namespace mcpplibs::llmapi;
 
-    auto client = Client(openai::OpenAI({
+    auto client = Client(Config{
         .apiKey = std::getenv("OPENAI_API_KEY"),
         .model = "gpt-4o-mini",
-    }));
+    });
 
     auto embedding = client.embed(
         {"hello world", "modern c++"},

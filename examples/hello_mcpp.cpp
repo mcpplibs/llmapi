@@ -13,10 +13,10 @@ int main() {
         return 1;
     }
 
-    auto client = Client(openai::OpenAI({
+    auto client = Client(Config{
         .apiKey = apiKey,
         .model = "gpt-4o-mini",
-    }));
+    });
 
     auto resp = client.chat("Hello! In one sentence, introduce modern C++.");
     println(resp.text());

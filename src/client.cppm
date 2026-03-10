@@ -3,6 +3,8 @@ export module mcpplibs.llmapi:client;
 import :types;
 import :provider;
 import :coro;
+import :openai;
+import :anthropic;
 import std;
 
 export namespace mcpplibs::llmapi {
@@ -16,6 +18,12 @@ private:
 
 public:
     explicit Client(P provider) : provider_(std::move(provider)) {}
+    explicit Client(openai::Config config)
+        requires std::same_as<P, openai::OpenAI>
+        : provider_(openai::OpenAI(std::move(config))) {}
+    explicit Client(anthropic::Config config)
+        requires std::same_as<P, anthropic::Anthropic>
+        : provider_(anthropic::Anthropic(std::move(config))) {}
 
     // Config (chainable)
     Client& default_params(ChatParams params) {
@@ -106,5 +114,8 @@ public:
     const P& provider() const { return provider_; }
     P& provider() { return provider_; }
 };
+
+Client(openai::Config) -> Client<openai::OpenAI>;
+Client(anthropic::Config) -> Client<anthropic::Anthropic>;
 
 } // namespace mcpplibs::llmapi

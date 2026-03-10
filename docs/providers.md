@@ -22,10 +22,10 @@ URL::Poe
 Use `openai::OpenAI` for OpenAI chat, streaming, tool calls, and embeddings.
 
 ```cpp
-auto client = Client(openai::OpenAI({
+auto client = Client(Config{
     .apiKey = std::getenv("OPENAI_API_KEY"),
     .model = "gpt-4o-mini",
-}));
+});
 ```
 
 - Get keys from [OpenAI Platform](https://platform.openai.com/api-keys)

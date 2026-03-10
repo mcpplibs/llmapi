@@ -83,11 +83,13 @@ class Client;
 ### Construction
 
 ```cpp
-auto client = Client(openai::OpenAI({
+auto client = Client(Config{
     .apiKey = std::getenv("OPENAI_API_KEY"),
     .model = "gpt-4o-mini",
-}));
+});
 ```
+
+`Config` is an exported alias for `openai::Config`, so the default path uses an OpenAI-style provider without explicitly writing `openai::OpenAI`.
 
 ### Configuration
 
@@ -236,10 +238,10 @@ import std;
 int main() {
     using namespace mcpplibs::llmapi;
 
-    auto client = Client(openai::OpenAI({
+    auto client = Client(Config{
         .apiKey = std::getenv("OPENAI_API_KEY"),
         .model = "gpt-4o-mini",
-    }));
+    });
 
     client.default_params(ChatParams{
         .temperature = 0.2,
