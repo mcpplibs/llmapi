@@ -92,7 +92,7 @@ jobs:
 
       - name: Configure xmake
         run: |
-          LLVM_SDK=$(find "$HOME/.xlings/data/xpkgs" -maxdepth 1 -type d -name "xim-x-llvm*" | head -1)
+          LLVM_SDK="$HOME/.xlings/data/xpkgs/xim-x-llvm/20.1.7"
           test -n "$LLVM_SDK"
           xmake f -m release --toolchain=llvm --sdk="$LLVM_SDK" -y -vvD
 
