@@ -21,15 +21,9 @@ jobs:
           echo "$HOME/.xlings/subos/current/bin" >> "$GITHUB_PATH"
 
       - name: Install dependencies
-        run: xlings install -g
-
-      - name: Configure Linux toolchain env
         run: |
-          echo "$HOME/.xlings/subos/default/bin" >> "$GITHUB_PATH"
-          echo "CC=$HOME/.xlings/subos/default/bin/gcc" >> "$GITHUB_ENV"
-          echo "CXX=$HOME/.xlings/subos/default/bin/g++" >> "$GITHUB_ENV"
-          echo "AR=$HOME/.xlings/subos/default/bin/ar" >> "$GITHUB_ENV"
-          echo "RANLIB=$HOME/.xlings/subos/default/bin/ranlib" >> "$GITHUB_ENV"
+          xlings install -g
+          gcc --version
 
       - name: Build
         run: xmake build -a -y -vvD
@@ -58,7 +52,9 @@ jobs:
           echo "$HOME/.xlings/subos/current/bin" >> "$GITHUB_PATH"
 
       - name: Install dependencies
-        run: xlings install -g
+        run: |
+          xlings install -g
+          clang --version
 
       - name: Configure xmake
         run: xmake f --toolchain=llvm --sdk="$HOME/.xlings/data/xpkgs/xim-x-llvm/20.0.7" -y -vvD
