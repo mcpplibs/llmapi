@@ -152,6 +152,125 @@ int main() {
 }
 ```
 
+## Exception Mode
+
+The library currently reports failures by throwing exceptions. This is the recommended direct style when you want errors to propagate naturally.
+
+```cpp
+import mcpplibs.llmapi;
+import std;
+
+int main() {
+    using namespace mcpplibs::llmapi;
+
+    try {
+        auto client = Client(Config{
+            .apiKey = std::getenv("OPENAI_API_KEY"),
+            .model = "gpt-4o-mini",
+        });
+
+        auto resp = client.chat("Explain RAII in one paragraph.");
+        std::cout << resp.text() << '\n';
+    } catch (const ApiError& e) {
+        std::cerr << "API error: status=" << e.statusCode << " body=" << e.body << '\n';
+        return 2;
+    } catch (const ConnectionError& e) {
+        std::cerr << "Connection error: " << e.what() << '\n';
+        return 3;
+    } catch (const std::exception& e) {
+        std::cerr << "Unexpected error: " << e.what() << '\n';
+        return 4;
+    }
+}
+```
+
+## No-Exception Style At Call Site
+
+If your application prefers not to let exceptions escape, wrap the call and convert the result to `std::optional`, `std::expected`, or your own result type.
+
+```cpp
+import mcpplibs.llmapi;
+import std;
+
+std::optional<std::string> safe_chat(std::string_view prompt) {
+    using namespace mcpplibs::llmapi;
+
+    try {
+        auto client = Client(Config{
+            .apiKey = std::getenv("OPENAI_API_KEY"),
+            .model = "gpt-4o-mini",
+        });
+        return client.chat(prompt).text();
+    } catch (...) {
+        return std::nullopt;
+    }
+}
+```
+
+## Recommended Retry At The Application Layer
+
+Retry policy is currently best implemented by the library user because retryability depends on business semantics.
+
+```cpp
+import mcpplibs.llmapi;
+import std;
+
+std::string chat_with_retry(std::string_view prompt) {
+    using namespace mcpplibs::llmapi;
+
+    for (int attempt = 0; attempt < 3; ++attempt) {
+        try {
+            auto client = Client(Config{
+                .apiKey = std::getenv("OPENAI_API_KEY"),
+                .model = "gpt-4o-mini",
+            });
+            return client.chat(prompt).text();
+        } catch (const ConnectionError&) {
+        } catch (const ApiError& e) {
+            if (e.statusCode != 429 && (e.statusCode < 500 || e.statusCode >= 600)) {
+                throw;
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(200 * (1 << attempt)));
+    }
+
+    throw std::runtime_error("retry limit exceeded");
+}
+```
+
+## Parallel Use With Isolated Clients
+
+The recommended concurrency model is one client per task or thread.
+
+```cpp
+import mcpplibs.llmapi;
+import std;
+
+int main() {
+    using namespace mcpplibs::llmapi;
+
+    auto futureA = std::async(std::launch::async, [] {
+        auto client = Client(Config{
+            .apiKey = std::getenv("OPENAI_API_KEY"),
+            .model = "gpt-4o-mini",
+        });
+        return client.chat("Summarize modules.").text();
+    });
+
+    auto futureB = std::async(std::launch::async, [] {
+        auto client = Client(AnthropicConfig{
+            .apiKey = std::getenv("ANTHROPIC_API_KEY"),
+            .model = "claude-sonnet-4-20250514",
+        });
+        return client.chat("Translate 'hello world' to Japanese.").text();
+    });
+
+    std::cout << futureA.get() << '\n';
+    std::cout << futureB.get() << '\n';
+}
+```
+
 ## See Also
 
 - [C++ API Reference](cpp-api.md)
