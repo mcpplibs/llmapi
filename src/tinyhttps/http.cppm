@@ -219,6 +219,8 @@ static bool iequals(std::string_view a, std::string_view b) {
 
 export class HttpClient {
 public:
+    // Thread-safety: HttpClient owns a mutable connection pool and is not synchronized.
+    // Keep each instance isolated to a single caller/task unless you add external locking.
     explicit HttpClient(HttpClientConfig config = {})
         : config_(std::move(config)) {}
 

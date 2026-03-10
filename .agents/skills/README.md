@@ -7,6 +7,7 @@
 | 技能 | 说明 |
 |------|------|
 | [mcpp-style-ref](mcpp-style-ref/SKILL.md) | 面向 mcpp 项目的 Modern/Module C++ (C++23) 命名、模块化与实践规则 |
+| [llmapi-best-practices](llmapi-best-practices/SKILL.md) | 面向本仓库 llmapi 的使用最佳实践、文档入口、示例位置、并发/异常/重试建议与相关生态链接 |
 
 ## 使用方式
 

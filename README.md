@@ -9,7 +9,7 @@
 
 | English - [简体中文](README.zh.md) - [繁體中文](README.zh.hant.md) |
 |:---:|
-| [Documentation](docs/) - [C++ API](docs/cpp-api.md) - [Examples](docs/examples.md) |
+| [Documentation](docs/README.md) - [English Docs](docs/en/README.md) - [中文文档](docs/zh/README.md) - [繁體中文文件](docs/zh-hant/README.md) |
 
 `llmapi` provides a typed `Client<Provider>` API for chat, streaming, embeddings, tool calls, and conversation persistence. The default config alias `Config` maps to OpenAI-style providers, so the common case does not need an explicit `openai::OpenAI` wrapper.
 
@@ -21,6 +21,23 @@
 - Embeddings via the OpenAI provider
 - Conversation save/load helpers
 - OpenAI-compatible endpoint support through `openai::Config::baseUrl`
+
+## Production Readiness
+
+`llmapi` is usable for internal tools, prototypes, and early production experiments, but it should not yet be treated as fully industrial-grade infrastructure.
+
+Required gaps before that bar:
+
+- Unified error model across providers and transport
+- Retry, backoff, timeout, and idempotency policy
+- Request cancellation for long-running and streaming calls
+- Logging, metrics, trace hooks, and request correlation
+- Hardening of the custom HTTP/TLS transport layer
+- Fault-injection, concurrency, and large-scale mock testing
+- Stronger API compatibility and versioning guarantees
+- More complete production configuration surface
+- Explicit thread-safety and concurrency semantics
+- Operational documentation for retries, keys, proxies, and failure handling
 
 ## Quick Start
 
@@ -79,7 +96,7 @@ xmake run chat
 
 ```lua
 add_repositories("mcpplibs-index https://github.com/mcpplibs/mcpplibs-index.git")
-add_requires("llmapi 0.0.2")
+add_requires("llmapi 0.1.0")
 
 target("demo")
     set_kind("binary")
@@ -89,7 +106,7 @@ target("demo")
     add_packages("llmapi")
 ```
 
-See [docs/getting-started.md](docs/getting-started.md) and [docs/providers.md](docs/providers.md) for more setup detail.
+See [docs/en/getting-started.md](docs/en/getting-started.md), [docs/en/providers.md](docs/en/providers.md), and [docs/en/README.md](docs/en/README.md) for more setup and readiness detail.
 
 ## License
 

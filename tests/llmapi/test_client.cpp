@@ -7,9 +7,15 @@ import std;
 using namespace mcpplibs::llmapi;
 
 struct FullMockProvider {
+    std::string prefix { "reply to: " };
+    int delayMs { 0 };
+
     std::string_view name() const { return "full_mock"; }
 
     ChatResponse chat(const std::vector<Message>& msgs, const ChatParams&) {
+        if (delayMs > 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
+        }
         std::string lastContent;
         if (!msgs.empty()) {
             auto& c = msgs.back().content;
@@ -18,7 +24,7 @@ struct FullMockProvider {
             }
         }
         return ChatResponse {
-            .content = { TextContent { "reply to: " + lastContent } },
+            .content = { TextContent { prefix + lastContent } },
             .stopReason = StopReason::EndOfTurn,
             .usage = { .inputTokens = 10, .outputTokens = 5, .totalTokens = 15 },
         };
@@ -95,6 +101,40 @@ int main() {
     client2.load_conversation("/tmp/test_client_conv.json");
     assert(client2.conversation().size() == 2);
     std::filesystem::remove("/tmp/test_client_conv.json");
+
+    // Test 8: isolated clients can be used concurrently without sharing conversation state
+    auto futureA = std::async(std::launch::async, [] {
+        auto isolatedClient = Client(FullMockProvider{
+            .prefix = "openai-like: ",
+            .delayMs = 10,
+        });
+        isolatedClient.system("provider a");
+        auto resp = isolatedClient.chat("hello from a");
+        return std::pair{
+            resp.text(),
+            isolatedClient.conversation().size(),
+        };
+    });
+
+    auto futureB = std::async(std::launch::async, [] {
+        auto isolatedClient = Client(FullMockProvider{
+            .prefix = "anthropic-like: ",
+            .delayMs = 10,
+        });
+        isolatedClient.system("provider b");
+        auto resp = isolatedClient.chat("hello from b");
+        return std::pair{
+            resp.text(),
+            isolatedClient.conversation().size(),
+        };
+    });
+
+    auto [textA, sizeA] = futureA.get();
+    auto [textB, sizeB] = futureB.get();
+    assert(textA == "openai-like: hello from a");
+    assert(textB == "anthropic-like: hello from b");
+    assert(sizeA == 3);
+    assert(sizeB == 3);
 
     println("test_client: ALL PASSED");
     return 0;

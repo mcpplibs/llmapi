@@ -1,4 +1,5 @@
 set_languages("c++23")
+set_version("0.1.0")
 set_policy("build.c++.modules", true)
 
 add_requires("mbedtls 3.6.1")
