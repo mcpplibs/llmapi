@@ -96,7 +96,7 @@ xmake run chat
 
 ```lua
 add_repositories("mcpplibs-index https://github.com/mcpplibs/mcpplibs-index.git")
-add_requires("llmapi 0.0.2")
+add_requires("llmapi 0.1.0")
 
 target("demo")
     set_kind("binary")

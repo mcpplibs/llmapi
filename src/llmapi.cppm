@@ -14,6 +14,7 @@ import std;
 import mcpplibs.llmapi.nlohmann.json;
 
 namespace mcpplibs::llmapi {
+    export inline constexpr std::string_view VERSION { "0.1.0" };
     export using OpenAI = openai::OpenAI;
     export using Config = openai::Config;
     export using Anthropic = anthropic::Anthropic;
