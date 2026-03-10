@@ -1,85 +1,96 @@
 # llmapi
 
-> Modern C++ LLM API client with openai-compatible support
+> 使用 C++23 模块构建的现代 LLM 客户端
 
 [![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg)](https://en.cppreference.com/w/cpp/23)
 [![Module](https://img.shields.io/badge/module-ok-green.svg)](https://en.cppreference.com/w/cpp/language/modules)
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](LICENSE)
-[![OpenAI Compatible](https://img.shields.io/badge/OpenAI_API-Compatible-green.svg)](https://platform.openai.com/docs/api-reference)
+[![OpenAI Compatible](https://img.shields.io/badge/OpenAI-Compatible-green.svg)](https://platform.openai.com/docs/api-reference)
 
 | [English](README.md) - 简体中文 - [繁體中文](README.zh.hant.md) |
 |:---:|
-| [完整文档](docs/) - [C++ API](docs/cpp-api.md) - [C API](docs/c-api.md) - [示例](docs/examples.md) |
+| [文档导航](docs/README.md) - [中文文档](docs/zh/README.md) - [English Docs](docs/en/README.md) - [繁體中文文件](docs/zh-hant/README.md) |
 
-简洁、类型安全的 LLM API 客户端，使用 C++23 模块。流式接口设计，零成本抽象。支持 OpenAI、Poe、DeepSeek 及兼容端点。
+`llmapi` 提供类型化的 `Client<Provider>` API，覆盖聊天、流式输出、嵌入、工具调用与对话持久化。默认别名 `Config` 对应 OpenAI 风格配置，常见场景不需要显式写 `openai::OpenAI(...)`。
 
-## ✨ 特性
+## 特性
 
-- **C++23 模块** - `import mcpplibs.llmapi`
-- **自动保存历史** - 对话历史自动管理
-- **类型安全流式** - 概念约束的回调函数
-- **流式接口** - 可链式调用的方法
-- **提供商无关** - OpenAI、Poe 及兼容端点
+- C++23 模块：`import mcpplibs.llmapi`
+- 强类型消息、工具与响应结构
+- 同步、异步、流式聊天接口
+- OpenAI Provider 支持 embeddings
+- 支持保存 / 加载对话历史
+- 可通过 `baseUrl` 访问 OpenAI 兼容端点
 
 ## 快速开始
 
 ```cpp
-import std;
 import mcpplibs.llmapi;
+import std;
 
 int main() {
-    using namespace mcpplibs;
-    
-    llmapi::Client client(std::getenv("OPENAI_API_KEY"), llmapi::URL::Poe);
+    using namespace mcpplibs::llmapi;
 
-    client.model("gpt-5")
-          .system("You are a helpful assistant.")
-          .user("In one sentence, introduce modern C++. 并给出中文翻译")
-          .request([](std::string_view chunk) {
-                std::print("{}", chunk);
-                std::cout.flush();
-          });
+    auto apiKey = std::getenv("OPENAI_API_KEY");
+    if (!apiKey) {
+        std::cerr << "OPENAI_API_KEY not set\n";
+        return 1;
+    }
 
+    auto client = Client(Config{
+        .apiKey = apiKey,
+        .model = "gpt-4o-mini",
+    });
+
+    client.system("You are a concise assistant.");
+    auto resp = client.chat("用两句话解释 C++23 模块的价值。");
+
+    std::cout << resp.text() << '\n';
     return 0;
 }
 ```
 
-### 模型 / 提供商
+## Provider
+
+- `Config`：`openai::Config` 的导出别名，默认走 OpenAI 风格
+- `openai::OpenAI`：OpenAI 聊天、流式、工具调用、embeddings
+- `AnthropicConfig` / `anthropic::Anthropic`：Anthropic 聊天与流式
+
+兼容端点示例：
 
 ```cpp
-llmapi::Client client(apiKey, llmapi::URL::OpenAI);    // OpenAI
-llmapi::Client client(apiKey, llmapi::URL::Poe);       // Poe
-llmapi::Client client(apiKey, llmapi::URL::DeepSeek);  // Deepseek
-llmapi::Client client(apiKey, "https://custom.com");   // 自定义
+auto client = Client(Config{
+    .apiKey = std::getenv("DEEPSEEK_API_KEY"),
+    .baseUrl = std::string(URL::DeepSeek),
+    .model = "deepseek-chat",
+});
 ```
 
-## 构建
+## 构建与运行
 
 ```bash
-xmake              # 构建
-xmake run basic    # 运行示例（需要先配置 OPENAI_API_KEY）
+xmake
+xmake run hello_mcpp
+xmake run basic
+xmake run chat
 ```
 
-## 在构建工具中使用
-
-### xmake
+## 包管理使用
 
 ```lua
--- 0 - 添加 mcpplibs 索引仓库
-add_repositories("mcpplibs-index https://github.com/mcpplibs/llmapi.git")
-
--- 1 - 添加需要的库和版本
+add_repositories("mcpplibs-index https://github.com/mcpplibs/mcpplibs-index.git")
 add_requires("llmapi 0.0.2")
+
+target("demo")
+    set_kind("binary")
+    set_languages("c++23")
+    set_policy("build.c++.modules", true)
+    add_files("src/*.cpp")
+    add_packages("llmapi")
 ```
 
-> More: [mcpplibs-index](https://github.com/mcpplibs/mcpplibs-index)
+更多内容见 [docs/zh/getting-started.md](docs/zh/getting-started.md) 与 [docs/zh/providers.md](docs/zh/providers.md)。
 
-### cmake
+## 许可证
 
-```
-todo...
-```
-
-## 📄 许可证
-
-Apache-2.0 - 详见 [LICENSE](LICENSE)
+Apache-2.0，详见 [LICENSE](LICENSE)

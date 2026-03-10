@@ -9,7 +9,7 @@
 
 | English - [简体中文](README.zh.md) - [繁體中文](README.zh.hant.md) |
 |:---:|
-| [Documentation](docs/) - [C++ API](docs/cpp-api.md) - [Examples](docs/examples.md) |
+| [Documentation](docs/README.md) - [English Docs](docs/en/README.md) - [中文文档](docs/zh/README.md) - [繁體中文文件](docs/zh-hant/README.md) |
 
 `llmapi` provides a typed `Client<Provider>` API for chat, streaming, embeddings, tool calls, and conversation persistence. The default config alias `Config` maps to OpenAI-style providers, so the common case does not need an explicit `openai::OpenAI` wrapper.
 
@@ -89,7 +89,7 @@ target("demo")
     add_packages("llmapi")
 ```
 
-See [docs/getting-started.md](docs/getting-started.md) and [docs/providers.md](docs/providers.md) for more setup detail.
+See [docs/en/getting-started.md](docs/en/getting-started.md) and [docs/en/providers.md](docs/en/providers.md) for more setup detail.
 
 ## License
 
