@@ -22,6 +22,23 @@
 - 支持保存 / 加载对话历史
 - 可通过 `baseUrl` 访问 OpenAI 兼容端点
 
+## 生产可用性
+
+`llmapi` 目前适合内部工具、原型项目和早期生产试用，但还不应直接视为完整工业级基础设施。
+
+要达到那个标准，至少还需要补齐：
+
+- 统一的 provider / 传输层错误模型
+- 重试、退避、超时、幂等策略
+- 长请求和流式请求的取消能力
+- 日志、指标、trace hook、请求关联信息
+- 自研 HTTP/TLS 传输层的进一步加固
+- 故障注入、并发、Mock、大规模测试
+- 更强的 API 兼容性与版本稳定性承诺
+- 更完整的生产配置面
+- 明确的线程安全和并发语义
+- 面向运维的重试、密钥、代理、故障处理文档
+
 ## 快速开始
 
 ```cpp
@@ -89,7 +106,7 @@ target("demo")
     add_packages("llmapi")
 ```
 
-更多内容见 [docs/zh/getting-started.md](docs/zh/getting-started.md) 与 [docs/zh/providers.md](docs/zh/providers.md)。
+更多内容见 [docs/zh/getting-started.md](docs/zh/getting-started.md)、[docs/zh/providers.md](docs/zh/providers.md) 与 [docs/zh/README.md](docs/zh/README.md)。
 
 ## 许可证
 

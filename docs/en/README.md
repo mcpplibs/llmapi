@@ -25,6 +25,23 @@ Language:
 - OpenAI-compatible endpoint support through configurable base URLs
 - Conversation save/load helpers for local session persistence
 
+## Production Readiness
+
+The library is usable for internal tools, prototypes, and early production adoption, but it should not yet be described as fully industrial-grade infrastructure.
+
+Required gaps before that claim:
+
+- Unified error model across providers and transport
+- Retry, backoff, timeout, and idempotency policy
+- Request cancellation for long-running and streaming calls
+- Logging, metrics, trace hooks, and request correlation
+- Hardening of the custom HTTP/TLS transport layer
+- Fault-injection, concurrency, and large-scale mock testing
+- Stronger API compatibility and versioning guarantees
+- More complete production configuration surface
+- Explicit thread-safety and concurrency semantics
+- Operational documentation for retries, keys, proxies, and failure handling
+
 ## License
 
 Apache-2.0 - see [LICENSE](../../LICENSE)
