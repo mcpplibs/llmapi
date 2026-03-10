@@ -21,10 +21,10 @@ int main() {
     assert(provider.name() == "anthropic");
 
     // Test 3: Client<Anthropic> compiles
-    auto client = Client(anthropic::Anthropic({
+    auto client = Client(AnthropicConfig{
         .apiKey = "test",
         .model = "claude-sonnet-4-20250514",
-    }));
+    });
     assert(client.provider().name() == "anthropic");
 
     println("test_anthropic_serialize: ALL PASSED");

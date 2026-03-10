@@ -1,85 +1,96 @@
 # llmapi
 
-> Modern C++ LLM API client with openai-compatible support
+> Modern C++23 LLM client built with modules
 
 [![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg)](https://en.cppreference.com/w/cpp/23)
 [![Module](https://img.shields.io/badge/module-ok-green.svg)](https://en.cppreference.com/w/cpp/language/modules)
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](LICENSE)
-[![OpenAI Compatible](https://img.shields.io/badge/OpenAI_API-Compatible-green.svg)](https://platform.openai.com/docs/api-reference)
+[![OpenAI Compatible](https://img.shields.io/badge/OpenAI-Compatible-green.svg)](https://platform.openai.com/docs/api-reference)
 
 | English - [简体中文](README.zh.md) - [繁體中文](README.zh.hant.md) |
 |:---:|
-| [Documentation](docs/) - [C++ API](docs/cpp-api.md) - [C API](docs/c-api.md) - [Examples](docs/examples.md) |
+| [Documentation](docs/) - [C++ API](docs/cpp-api.md) - [Examples](docs/examples.md) |
 
-Clean, type-safe LLM API client using C++23 modules. Fluent interface with zero-cost abstractions. Works with OpenAI, Poe, DeepSeek and compatible endpoints.
+`llmapi` provides a typed `Client<Provider>` API for chat, streaming, embeddings, tool calls, and conversation persistence. The default config alias `Config` maps to OpenAI-style providers, so the common case does not need an explicit `openai::OpenAI` wrapper.
 
-## ✨ Features
+## Features
 
-- **C++23 Modules** - `import mcpplibs.llmapi`
-- **Auto-Save History** - Conversation history managed automatically
-- **Type-Safe Streaming** - Concept-constrained callbacks
-- **Fluent Interface** - Chainable methods
-- **Provider Agnostic** - OpenAI, Poe, and compatible endpoints
+- `import mcpplibs.llmapi` with C++23 modules
+- Strongly typed messages, tools, and response structs
+- Sync, async, and streaming chat APIs
+- Embeddings via the OpenAI provider
+- Conversation save/load helpers
+- OpenAI-compatible endpoint support through `openai::Config::baseUrl`
 
 ## Quick Start
 
 ```cpp
-import std;
 import mcpplibs.llmapi;
+import std;
 
 int main() {
-    using namespace mcpplibs;
-    
-    llmapi::Client client(std::getenv("OPENAI_API_KEY"), llmapi::URL::Poe);
+    using namespace mcpplibs::llmapi;
 
-    client.model("gpt-5")
-          .system("You are a helpful assistant.")
-          .user("In one sentence, introduce modern C++. 并给出中文翻译")
-          .request([](std::string_view chunk) {
-                std::print("{}", chunk);
-                std::cout.flush();
-          });
+    auto apiKey = std::getenv("OPENAI_API_KEY");
+    if (!apiKey) {
+        std::cerr << "OPENAI_API_KEY not set\n";
+        return 1;
+    }
 
+    auto client = Client(Config{
+        .apiKey = apiKey,
+        .model = "gpt-4o-mini",
+    });
+
+    client.system("You are a concise assistant.");
+    auto resp = client.chat("Explain why C++23 modules are useful in two sentences.");
+
+    std::cout << resp.text() << '\n';
     return 0;
 }
 ```
 
-### Models / Providers
+## Providers
+
+- `openai::OpenAI` for OpenAI chat, streaming, embeddings, and OpenAI-compatible endpoints
+- `anthropic::Anthropic` for Anthropic chat and streaming
+- `Config` as a convenient alias for `openai::Config`
+
+Compatible endpoints can reuse the OpenAI provider:
 
 ```cpp
-llmapi::Client client(apiKey, llmapi::URL::OpenAI);    // OpenAI
-llmapi::Client client(apiKey, llmapi::URL::Poe);       // Poe
-llmapi::Client client(apiKey, llmapi::URL::DeepSeek);  // Deepseek
-llmapi::Client client(apiKey, "https://custom.com");   // Custom
+auto provider = openai::OpenAI({
+    .apiKey = std::getenv("DEEPSEEK_API_KEY"),
+    .baseUrl = std::string(URL::DeepSeek),
+    .model = "deepseek-chat",
+});
 ```
 
-## Building
+## Build And Run
 
 ```bash
-xmake              # Build
-xmake run basic    # Run example(after cofig OPENAI_API_KEY)
+xmake
+xmake run hello_mcpp
+xmake run basic
+xmake run chat
 ```
 
-## Use in Build Tools
-
-### xmake
+## Package Usage
 
 ```lua
--- 0 - Add mcpplibs's index repos
-add_repositories("mcpplibs-index https://github.com/mcpplibs/llmapi.git")
-
--- 1 - Add the libraries and versions you need
+add_repositories("mcpplibs-index https://github.com/mcpplibs/mcpplibs-index.git")
 add_requires("llmapi 0.0.2")
+
+target("demo")
+    set_kind("binary")
+    set_languages("c++23")
+    set_policy("build.c++.modules", true)
+    add_files("src/*.cpp")
+    add_packages("llmapi")
 ```
 
-> More: [mcpplibs-index](https://github.com/mcpplibs/mcpplibs-index)
+See [docs/getting-started.md](docs/getting-started.md) and [docs/providers.md](docs/providers.md) for more setup detail.
 
-### cmake
-
-```
-todo...
-```
-
-## 📄 License
+## License
 
 Apache-2.0 - see [LICENSE](LICENSE)

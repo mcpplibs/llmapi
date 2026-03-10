@@ -15,6 +15,9 @@ import mcpplibs.llmapi.nlohmann.json;
 
 namespace mcpplibs::llmapi {
     export using OpenAI = openai::OpenAI;
+    export using Config = openai::Config;
+    export using Anthropic = anthropic::Anthropic;
+    export using AnthropicConfig = anthropic::Config;
     export using URL = llmapi::URL;
     export using Json = nlohmann::json;
 } // namespace mcpplibs::llmapi

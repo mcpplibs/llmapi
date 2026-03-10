@@ -1,12 +1,8 @@
 # Examples
 
-Practical examples for common use cases.
+Practical examples using the current `Client<Provider>` API.
 
-## C++ Examples
-
-### Hello World
-
-Minimal streaming example:
+## Minimal Chat
 
 ```cpp
 import mcpplibs.llmapi;
@@ -14,159 +10,19 @@ import std;
 
 int main() {
     using namespace mcpplibs::llmapi;
-    
-    Client client(std::getenv("OPENAI_API_KEY"), URL::Poe);
 
-    client.model("gpt-5")
-          .system("You are a helpful assistant.")
-          .user("In one sentence, introduce modern C++.")
-          .request([](std::string_view chunk) {
-              std::print("{}", chunk);
-              std::cout.flush();
-          });
-
-    return 0;
-}
-```
-
-### Chat Application
-
-Interactive CLI chat:
-
-```cpp
-import mcpplibs.llmapi;
-import std;
-
-int main() {
-    using namespace mcpplibs::llmapi;
-    
-    Client client(std::getenv("OPENAI_API_KEY"), URL::Poe);
-    client.model("gpt-5").system("You are a helpful assistant.");
-
-    std::println("AI Chat CLI - Type 'quit' to exit\n");
-
-    std::string input;
-    while (true) {
-        std::print("You: ");
-        if (!std::getline(std::cin, input) || input == "quit" || input == "q") {
-            std::println("\nBye!");
-            break;
-        }
-
-        if (input.empty()) continue;
-
-        client.user(input);
-        std::print("\nAI: ");
-        
-        client.request([](std::string_view chunk) {
-            std::print("{}", chunk);
-            std::cout.flush();
-        });
-        
-        std::println("\n");
-    }
-
-    return 0;
-}
-```
-
-### Multi-Turn Conversation
-
-Using conversation history:
-
-```cpp
-import mcpplibs.llmapi;
-import std;
-
-int main() {
-    using namespace mcpplibs::llmapi;
-    
-    Client client(std::getenv("OPENAI_API_KEY"), URL::Poe);
-    client.model("gpt-5").system("You are a helpful assistant.");
-
-    // First question
-    client.user("What is the capital of France?");
-    client.request();
-    std::println("Q1 Answer: {}\n", client.getAnswer());
-
-    // Follow-up (uses history)
-    client.user("What's its population?");
-    client.request();
-    std::println("Q2 Answer: {}\n", client.getAnswer());
-
-    // Another follow-up
-    client.user("Translate the above to Chinese.");
-    client.request();
-    std::println("Q3 Answer: {}\n", client.getAnswer());
-
-    std::println("Total messages: {}", client.getMessageCount());
-    
-    return 0;
-}
-```
-
-### Non-Streaming with JSON Response
-
-```cpp
-import mcpplibs.llmapi;
-import std;
-
-int main() {
-    using namespace mcpplibs::llmapi;
-    
-    Client client(std::getenv("OPENAI_API_KEY"), URL::Poe);
-    client.model("gpt-5").user("What is 2+2?");
-
-    auto response = client.request();
-    
-    // Access full JSON response
-    std::println("Model: {}", response["model"]);
-    std::println("Content: {}", response["choices"][0]["message"]["content"]);
-    
-    // Or use getAnswer()
-    std::println("Answer: {}", client.getAnswer());
-    
-    return 0;
-}
-```
-
-### Translation Chain
-
-```cpp
-import mcpplibs.llmapi;
-import std;
-
-int main() {
-    using namespace mcpplibs::llmapi;
-    
-    Client client(std::getenv("OPENAI_API_KEY"), URL::Poe);
-    client.model("gpt-5");
-
-    // Generate English story
-    client.system("You are a creative writer.")
-          .user("Write a short story about C++ (50 words)");
-    
-    std::print("Story: ");
-    client.request([](std::string_view chunk) {
-        std::print("{}", chunk);
-        std::cout.flush();
+    auto client = Client(Config{
+        .apiKey = std::getenv("OPENAI_API_KEY"),
+        .model = "gpt-4o-mini",
     });
-    std::println("\n");
 
-    // Translate to Chinese (uses history)
-    client.user("请把上面的故事翻译成中文。");
-    std::print("Translation: ");
-    client.request([](std::string_view chunk) {
-        std::print("{}", chunk);
-        std::cout.flush();
-    });
-    std::println("");
-    
-    return 0;
+    client.system("You are a helpful assistant.");
+    auto resp = client.chat("In one sentence, explain C++23 modules.");
+    std::cout << resp.text() << '\n';
 }
 ```
 
-### Error Handling
+## Streaming Response
 
 ```cpp
 import mcpplibs.llmapi;
@@ -174,23 +30,125 @@ import std;
 
 int main() {
     using namespace mcpplibs::llmapi;
-    
-    try {
-        Client client(std::getenv("OPENAI_API_KEY"), URL::Poe);
-        
-        client.model("gpt-5")
-              .user("Hello")
-              .request();
-        
-        std::println("{}", client.getAnswer());
-        
-    } catch (const std::runtime_error& e) {
-        std::println("Runtime error: {}", e.what());
-    } catch (const std::exception& e) {
-        std::println("Error: {}", e.what());
+
+    auto client = Client(Config{
+        .apiKey = std::getenv("OPENAI_API_KEY"),
+        .model = "gpt-4o-mini",
+    });
+
+    std::string streamed;
+    client.chat_stream("Write a 3-line poem about templates.", [&](std::string_view chunk) {
+        streamed += chunk;
+        std::cout << chunk;
+    });
+    std::cout << "\n\nCollected " << streamed.size() << " bytes\n";
+}
+```
+
+## Multi-Turn Conversation
+
+```cpp
+import mcpplibs.llmapi;
+import std;
+
+int main() {
+    using namespace mcpplibs::llmapi;
+
+    auto client = Client(Config{
+        .apiKey = std::getenv("OPENAI_API_KEY"),
+        .model = "gpt-4o-mini",
+    });
+
+    client.system("Reply briefly.");
+
+    auto resp1 = client.chat("What is the capital of France?");
+    auto resp2 = client.chat("What is its population roughly?");
+
+    std::cout << resp1.text() << '\n';
+    std::cout << resp2.text() << '\n';
+    std::cout << "Messages stored: " << client.conversation().size() << '\n';
+}
+```
+
+## Save And Load Conversation
+
+```cpp
+import mcpplibs.llmapi;
+import std;
+
+int main() {
+    using namespace mcpplibs::llmapi;
+
+    auto client = Client(Config{
+        .apiKey = std::getenv("OPENAI_API_KEY"),
+        .model = "gpt-4o-mini",
+    });
+
+    client.chat("Remember that my favorite language is C++.");
+    client.save_conversation("conversation.json");
+
+    auto restored = Client(Config{
+        .apiKey = std::getenv("OPENAI_API_KEY"),
+        .model = "gpt-4o-mini",
+    });
+    restored.load_conversation("conversation.json");
+
+    auto resp = restored.chat("What language do I like?");
+    std::cout << resp.text() << '\n';
+}
+```
+
+## Tool Calling
+
+```cpp
+import mcpplibs.llmapi;
+import std;
+
+int main() {
+    using namespace mcpplibs::llmapi;
+
+    auto client = Client(Config{
+        .apiKey = std::getenv("OPENAI_API_KEY"),
+        .model = "gpt-4o-mini",
+    });
+
+    auto params = ChatParams{
+        .tools = std::vector<ToolDef>{{
+            .name = "get_temperature",
+            .description = "Get the temperature for a city",
+            .inputSchema = R"({"type":"object","properties":{"city":{"type":"string"}},"required":["city"]})",
+        }},
+        .toolChoice = ToolChoice::Auto,
+    };
+
+    auto resp = client.chat("What's the temperature in Tokyo?", params);
+    for (const auto& call : resp.tool_calls()) {
+        std::cout << call.name << ": " << call.arguments << '\n';
     }
-    
-    return 0;
+}
+```
+
+## Embeddings
+
+```cpp
+import mcpplibs.llmapi;
+import std;
+
+int main() {
+    using namespace mcpplibs::llmapi;
+
+    auto client = Client(Config{
+        .apiKey = std::getenv("OPENAI_API_KEY"),
+        .model = "gpt-4o-mini",
+    });
+
+    auto embedding = client.embed(
+        {"hello world", "modern c++"},
+        "text-embedding-3-small"
+    );
+
+    std::cout << "vectors: " << embedding.embeddings.size() << '\n';
+    std::cout << "dimension: " << embedding.embeddings[0].size() << '\n';
 }
 ```
 

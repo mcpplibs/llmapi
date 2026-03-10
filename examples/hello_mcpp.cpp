@@ -2,22 +2,24 @@
 import mcpplibs.llmapi;
 import std;
 
+#include "print.hpp"
+
 using namespace mcpplibs::llmapi;
 
 int main() {
     auto apiKey = std::getenv("OPENAI_API_KEY");
     if (!apiKey) {
-        std::println("Error: OPENAI_API_KEY not set");
+        println("Error: OPENAI_API_KEY not set");
         return 1;
     }
 
-    auto client = Client(openai::OpenAI({
+    auto client = Client(Config{
         .apiKey = apiKey,
         .model = "gpt-4o-mini",
-    }));
+    });
 
     auto resp = client.chat("Hello! In one sentence, introduce modern C++.");
-    std::println("{}", resp.text());
+    println(resp.text());
 
     return 0;
 }
