@@ -1,18 +1,21 @@
 // Basic usage example - demonstrates both streaming and non-streaming modes
-import std;
 import mcpplibs.llmapi;
+import std;
 
-using namespace mcpplibs;
+using namespace mcpplibs::llmapi;
 
 int main() {
-    auto api_key = std::getenv("OPENAI_API_KEY");
-    if (!api_key) {
+    auto apiKey = std::getenv("OPENAI_API_KEY");
+    if (!apiKey) {
         std::println("Error: OPENAI_API_KEY not set");
         return 1;
     }
 
-    llmapi::Client client(api_key, llmapi::URL::Poe);
-    client.model("gpt-5").system("You are a helpful assistant.");
+    auto client = Client(openai::OpenAI({
+        .apiKey = apiKey,
+        .model = "gpt-4o-mini",
+    }));
+    client.system("You are a helpful assistant.");
 
     std::println("=== llmapi Basic Usage Demo ===\n");
 
@@ -20,44 +23,24 @@ int main() {
         // Example 1: Non-streaming request
         std::println("[Example 1] Non-streaming mode:");
         std::println("Question: What is the capital of China?\n");
-        
-        client.user("What is the capital of China?");
-        client.request();
-        
-        std::println("Answer: {}\n", client.getAnswer());
+
+        auto resp = client.chat("What is the capital of China?");
+        std::println("Answer: {}\n", resp.text());
 
         // Example 2: Streaming request
         std::println("[Example 2] Streaming mode:");
         std::println("Question: Convince me to use modern C++ (100 words)\n");
 
-        client.user("Convince me to use modern C++ (100 words)");
+        client.clear();
+        client.system("You are a helpful assistant.");
         std::print("Answer: ");
-
-        client.request([](std::string_view chunk) {
-            std::print("{}", chunk);
-            std::cout.flush();
-        });
-        
+        auto resp2 = client.chat_stream("Convince me to use modern C++ (100 words)",
+            [](std::string_view chunk) {
+                std::print("{}", chunk);
+            });
         std::println("\n");
+        std::println("[Verification] Answer length: {} chars\n", resp2.text().size());
 
-        // Verify auto-save: get the last answer
-        auto last_answer = client.getAnswer();
-        std::println("[Verification] Last answer length: {} chars\n", last_answer.size());
-
-        // Example 3: Translate the story to Chinese
-        std::println("[Example 3] Translation (streaming):");
-        std::println("Question: 请把上个回答翻译成中文。\n");
-        
-        client.user("请把上面的故事翻译成中文。");
-        std::print("Answer: ");
-        
-        client.request([](std::string_view chunk) {
-            std::print("{}", chunk);
-            std::cout.flush();
-        });
-        
-        std::println("\n");
-        
     } catch (const std::exception& e) {
         std::println("\nError: {}\n", e.what());
         return 1;

@@ -1,18 +1,21 @@
 // Simple and elegant AI chat CLI tool using streaming
-import std;
 import mcpplibs.llmapi;
+import std;
 
-using namespace mcpplibs;
+using namespace mcpplibs::llmapi;
 
 int main() {
-    auto api_key = std::getenv("OPENAI_API_KEY");
-    if (!api_key) {
+    auto apiKey = std::getenv("OPENAI_API_KEY");
+    if (!apiKey) {
         std::println("Error: OPENAI_API_KEY not set");
         return 1;
     }
 
-    llmapi::Client client(api_key, llmapi::URL::Poe);
-    client.model("gpt-5").system("You are a helpful assistant.");
+    auto client = Client(openai::OpenAI({
+        .apiKey = apiKey,
+        .model = "gpt-4o-mini",
+    }));
+    client.system("You are a helpful assistant.");
 
     std::println("AI Chat CLI - Type 'quit' to exit\n");
 
@@ -29,16 +32,12 @@ int main() {
         if (input.empty()) continue;
 
         try {
-            client.user(input);
             std::print("\nAI: ");
-            
-            client.request([](std::string_view chunk) {
+            client.chat_stream(input, [](std::string_view chunk) {
                 std::print("{}", chunk);
-                std::cout.flush();
             });
-            
             std::println("\n");
-            
+
         } catch (const std::exception& e) {
             std::println("\nError: {}\n", e.what());
         }

@@ -58,3 +58,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Xlings
+
+.xlings
