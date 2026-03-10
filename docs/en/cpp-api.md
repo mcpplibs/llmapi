@@ -160,6 +160,12 @@ const P& provider() const
 P& provider()
 ```
 
+### Thread-Safety
+
+- `Client<P>` is stateful and not thread-safe
+- use one client per task or thread
+- do not share one client across concurrent callers
+
 ## Provider Config Types
 
 ```cpp

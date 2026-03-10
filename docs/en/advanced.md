@@ -57,6 +57,35 @@ auto resp = task.get();
 std::cout << resp.text() << '\n';
 ```
 
+## Concurrency Model
+
+Use instance isolation for concurrency:
+
+- `Client` is stateful and not thread-safe
+- `tinyhttps::HttpClient` is also not thread-safe
+- create one `Client` per task or per thread
+- do not share a single `Client` across concurrent callers
+
+This works well for calling multiple providers in parallel because each client owns its own provider, conversation, and transport state.
+
+```cpp
+auto futureA = std::async(std::launch::async, [&] {
+    auto client = Client(Config{
+        .apiKey = std::getenv("OPENAI_API_KEY"),
+        .model = "gpt-4o-mini",
+    });
+    return client.chat("summarize this");
+});
+
+auto futureB = std::async(std::launch::async, [&] {
+    auto client = Client(AnthropicConfig{
+        .apiKey = std::getenv("ANTHROPIC_API_KEY"),
+        .model = "claude-sonnet-4-20250514",
+    });
+    return client.chat("translate this");
+});
+```
+
 ## Tool Calling Loop
 
 The provider surfaces requested tools via `ChatResponse::tool_calls()`. You then append a tool result and continue the conversation.

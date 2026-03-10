@@ -17,6 +17,8 @@ private:
     ChatParams defaultParams_;
 
 public:
+    // Thread-safety: Client instances are intentionally stateful and not synchronized.
+    // Use one Client per task/thread and avoid sharing a Client across threads.
     explicit Client(P provider) : provider_(std::move(provider)) {}
     explicit Client(openai::Config config)
         requires std::same_as<P, openai::OpenAI>
