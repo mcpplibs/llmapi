@@ -22,23 +22,6 @@
 - 支援儲存 / 載入對話歷史
 - 可透過 `baseUrl` 存取 OpenAI 相容端點
 
-## 生產可用性
-
-`llmapi` 目前適合內部工具、原型專案與早期生產試用，但還不應直接視為完整工業級基礎設施。
-
-要達到那個標準，至少還需要補齊：
-
-- 統一的 provider / 傳輸層錯誤模型
-- 重試、退避、逾時、冪等策略
-- 長請求與串流請求的取消能力
-- 日誌、指標、trace hook、請求關聯資訊
-- 自研 HTTP/TLS 傳輸層的進一步加固
-- 故障注入、並發、Mock、大規模測試
-- 更強的 API 相容性與版本穩定性承諾
-- 更完整的生產設定面
-- 明確的執行緒安全與並發語義
-- 面向維運的重試、金鑰、代理、故障處理文件
-
 ## 快速開始
 
 ```cpp
@@ -106,7 +89,7 @@ target("demo")
     add_packages("llmapi")
 ```
 
-更多內容見 [docs/zh-hant/getting-started.md](docs/zh-hant/getting-started.md)、[docs/zh-hant/providers.md](docs/zh-hant/providers.md) 與 [docs/zh-hant/README.md](docs/zh-hant/README.md)。
+更多內容見 [docs/zh-hant/getting-started.md](docs/zh-hant/getting-started.md)、[docs/zh-hant/providers.md](docs/zh-hant/providers.md)、[docs/zh-hant/roadmap.md](docs/zh-hant/roadmap.md) 與 [docs/zh-hant/README.md](docs/zh-hant/README.md)。
 
 ## 授權
 
