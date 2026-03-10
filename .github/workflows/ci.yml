@@ -22,7 +22,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          xlings install -g
+          xlings install
           gcc --version
 
       - name: Build
@@ -53,7 +53,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          xlings install -g
+          xlings install
           clang --version
 
       - name: Configure xmake
@@ -87,7 +87,7 @@ jobs:
           echo "$env:USERPROFILE\.xlings\subos\current\bin" >> $env:GITHUB_PATH
 
       - name: Install dependencies
-        run: xlings install -g
+        run: xlings install
 
       - name: Build
         run: xmake build -a -y -vvD
