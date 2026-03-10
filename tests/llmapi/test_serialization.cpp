@@ -2,6 +2,7 @@ import mcpplibs.llmapi;
 import std;
 
 #include <cassert>
+#include "../test_print.hpp"
 
 int main() {
     using namespace mcpplibs::llmapi;
@@ -40,6 +41,6 @@ int main() {
     // Cleanup
     std::filesystem::remove(path);
 
-    std::println("test_serialization: ALL PASSED");
+    println("test_serialization: ALL PASSED");
     return 0;
 }

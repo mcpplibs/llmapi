@@ -2,13 +2,14 @@ import mcpplibs.llmapi;
 import std;
 
 #include <cassert>
+#include "../test_print.hpp"
 
 using namespace mcpplibs::llmapi;
 
 int main() {
     auto apiKey = std::getenv("OPENAI_API_KEY");
     if (!apiKey) {
-        std::println("OPENAI_API_KEY not set, skipping live test");
+        println("OPENAI_API_KEY not set, skipping live test");
         return 0;
     }
 
@@ -19,7 +20,7 @@ int main() {
 
     // Test 1: basic chat
     auto resp = client.chat("Say exactly: HELLO_TEST_OK");
-    std::println("Response: {}", resp.text());
+    println("Response: ", resp.text());
     assert(!resp.text().empty());
     assert(resp.usage.totalTokens > 0);
     assert(resp.stopReason == StopReason::EndOfTurn);
@@ -29,9 +30,9 @@ int main() {
     std::string streamed;
     auto resp2 = client.chat_stream("Say exactly: STREAM_OK", [&](std::string_view chunk) {
         streamed += chunk;
-        std::print("{}", chunk);
+        print(chunk);
     });
-    std::println("");
+    println();
     assert(!streamed.empty());
 
     // Test 3: conversation continuity
@@ -39,6 +40,6 @@ int main() {
     assert(!resp3.text().empty());
     assert(client.conversation().messages.size() == 4); // 2 user + 2 assistant
 
-    std::println("test_openai_live: ALL PASSED");
+    println("test_openai_live: ALL PASSED");
     return 0;
 }

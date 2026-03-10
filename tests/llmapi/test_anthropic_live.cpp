@@ -2,13 +2,14 @@ import mcpplibs.llmapi;
 import std;
 
 #include <cassert>
+#include "../test_print.hpp"
 
 using namespace mcpplibs::llmapi;
 
 int main() {
     auto apiKey = std::getenv("ANTHROPIC_API_KEY");
     if (!apiKey) {
-        std::println("ANTHROPIC_API_KEY not set, skipping live test");
+        println("ANTHROPIC_API_KEY not set, skipping live test");
         return 0;
     }
 
@@ -19,7 +20,7 @@ int main() {
 
     // Test 1: basic chat
     auto resp = client.chat("Say exactly: HELLO_TEST_OK");
-    std::println("Response: {}", resp.text());
+    println("Response: ", resp.text());
     assert(!resp.text().empty());
     assert(resp.usage.inputTokens > 0);
 
@@ -27,18 +28,18 @@ int main() {
     client.clear();
     client.system("Always respond with exactly one word.");
     auto resp2 = client.chat("What color is the sky?");
-    std::println("System test: {}", resp2.text());
+    println("System test: ", resp2.text());
 
     // Test 3: streaming
     client.clear();
     std::string streamed;
     auto resp3 = client.chat_stream("Say exactly: STREAM_OK", [&](std::string_view chunk) {
         streamed += chunk;
-        std::print("{}", chunk);
+        print(chunk);
     });
-    std::println("");
+    println();
     assert(!streamed.empty());
 
-    std::println("test_anthropic_live: ALL PASSED");
+    println("test_anthropic_live: ALL PASSED");
     return 0;
 }

@@ -2,6 +2,7 @@ import mcpplibs.llmapi;
 import std;
 
 #include <cassert>
+#include "../test_print.hpp"
 
 using namespace mcpplibs::llmapi;
 
@@ -76,6 +77,6 @@ int main() {
     assert(resp.tool_calls().size() == 1);
     assert(resp.tool_calls()[0].name == "search");
 
-    std::println("test_integration: ALL PASSED");
+    println("test_integration: ALL PASSED");
     return 0;
 }

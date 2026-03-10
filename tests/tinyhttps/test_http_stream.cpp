@@ -2,6 +2,7 @@ import mcpplibs.tinyhttps;
 import std;
 
 #include <cassert>
+#include "../test_print.hpp"
 
 int main() {
     using namespace mcpplibs::tinyhttps;
@@ -21,12 +22,12 @@ int main() {
         },
         [&lineCount](const SseEvent& event) -> bool {
             lineCount++;
-            std::println("Event {}: {}", lineCount, event.data.substr(0, 50));
+            println("Event ", lineCount, ": ", event.data.substr(0, 50));
             return true;
         }
     );
     assert(resp.statusCode == 200);
-    std::println("Stream/3 completed, received {} events, status {}", lineCount, resp.statusCode);
+    println("Stream/3 completed, received ", lineCount, " events, status ", resp.statusCode);
 
     // Test 2: early stop (return false from callback)
     int stopCount { 0 };
@@ -41,7 +42,7 @@ int main() {
         }
     );
     assert(resp2.statusCode == 200);
-    std::println("Stopped after {} events", stopCount);
+    println("Stopped after ", stopCount, " events");
 
     // Test 3: verify response headers are captured
     auto resp3 = client.send_stream(
@@ -53,9 +54,9 @@ int main() {
     );
     assert(resp3.statusCode == 200);
     assert(!resp3.headers.empty());
-    std::println("Response has {} headers", resp3.headers.size());
+    println("Response has ", resp3.headers.size(), " headers");
 
     Socket::platform_cleanup();
-    std::println("test_http_stream: ALL PASSED");
+    println("test_http_stream: ALL PASSED");
     return 0;
 }

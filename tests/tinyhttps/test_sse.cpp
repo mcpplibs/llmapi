@@ -2,6 +2,7 @@ import mcpplibs.tinyhttps;
 import std;
 
 #include <cassert>
+#include "../test_print.hpp"
 
 int main() {
     using namespace mcpplibs::tinyhttps;
@@ -70,6 +71,6 @@ int main() {
     assert(events[0].id == "123");
     assert(events[0].data == "msg");
 
-    std::println("test_sse: ALL PASSED");
+    println("test_sse: ALL PASSED");
     return 0;
 }

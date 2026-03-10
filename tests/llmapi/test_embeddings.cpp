@@ -2,13 +2,14 @@ import mcpplibs.llmapi;
 import std;
 
 #include <cassert>
+#include "../test_print.hpp"
 
 using namespace mcpplibs::llmapi;
 
 int main() {
     auto apiKey = std::getenv("OPENAI_API_KEY");
     if (!apiKey) {
-        std::println("OPENAI_API_KEY not set, skipping");
+        println("OPENAI_API_KEY not set, skipping");
         return 0;
     }
 
@@ -25,8 +26,8 @@ int main() {
     assert(resp.embeddings.size() == 2);
     assert(!resp.embeddings[0].empty());
     assert(resp.usage.inputTokens > 0);
-    std::println("Embedding dim: {}", resp.embeddings[0].size());
+    println("Embedding dim: ", resp.embeddings[0].size());
 
-    std::println("test_embeddings: ALL PASSED");
+    println("test_embeddings: ALL PASSED");
     return 0;
 }

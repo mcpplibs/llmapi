@@ -2,6 +2,7 @@ import mcpplibs.tinyhttps;
 import std;
 
 #include <cassert>
+#include "../test_print.hpp"
 
 int main() {
     using namespace mcpplibs::tinyhttps;
@@ -28,6 +29,6 @@ int main() {
     // so we only test config/parsing here
 
     Socket::platform_cleanup();
-    std::println("test_proxy: ALL PASSED");
+    println("test_proxy: ALL PASSED");
     return 0;
 }

@@ -2,6 +2,7 @@ import mcpplibs.tinyhttps;
 import std;
 
 #include <cassert>
+#include "../test_print.hpp"
 
 int main() {
     using namespace mcpplibs::tinyhttps;
@@ -44,6 +45,6 @@ int main() {
 
     Socket::platform_cleanup();
 
-    std::println("test_socket: ALL PASSED");
+    println("test_socket: ALL PASSED");
     return 0;
 }

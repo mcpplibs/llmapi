@@ -3,6 +3,7 @@ import mcpplibs.llmapi.nlohmann.json;
 import std;
 
 #include <cassert>
+#include "../test_print.hpp"
 
 using namespace mcpplibs::llmapi;
 using Json = nlohmann::json;
@@ -10,7 +11,7 @@ using Json = nlohmann::json;
 int main() {
     auto apiKey = std::getenv("OPENAI_API_KEY");
     if (!apiKey) {
-        std::println("OPENAI_API_KEY not set, skipping");
+        println("OPENAI_API_KEY not set, skipping");
         return 0;
     }
 
@@ -34,7 +35,7 @@ int main() {
     if (resp.stopReason == StopReason::ToolUse) {
         auto calls = resp.tool_calls();
         assert(!calls.empty());
-        std::println("Tool called: {} with args: {}", calls[0].name, calls[0].arguments);
+        println("Tool called: ", calls[0].name, " with args: ", calls[0].arguments);
         assert(calls[0].name == "get_temperature");
 
         auto args = Json::parse(calls[0].arguments);
@@ -55,13 +56,12 @@ int main() {
         auto messages = client.conversation().messages;
         auto& provider = client.provider();
         auto finalResp = provider.chat(messages, params);
-        std::println("Final: {}", finalResp.text());
+        println("Final: ", finalResp.text());
         assert(!finalResp.text().empty());
     } else {
-        std::println("Model didn't call tool (non-deterministic), response: {}",
-                     resp.text());
+        println("Model didn't call tool (non-deterministic), response: ", resp.text());
     }
 
-    std::println("test_tool_calling: ALL PASSED");
+    println("test_tool_calling: ALL PASSED");
     return 0;
 }

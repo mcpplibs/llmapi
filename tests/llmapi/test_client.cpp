@@ -2,6 +2,7 @@ import mcpplibs.llmapi;
 import std;
 
 #include <cassert>
+#include "../test_print.hpp"
 
 using namespace mcpplibs::llmapi;
 
@@ -95,6 +96,6 @@ int main() {
     assert(client2.conversation().size() == 2);
     std::filesystem::remove("/tmp/test_client_conv.json");
 
-    std::println("test_client: ALL PASSED");
+    println("test_client: ALL PASSED");
     return 0;
 }

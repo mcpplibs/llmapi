@@ -3,6 +3,7 @@ import mcpplibs.llmapi.nlohmann.json;
 import std;
 
 #include <cassert>
+#include "../test_print.hpp"
 
 using namespace mcpplibs::llmapi;
 using Json = nlohmann::json;
@@ -10,7 +11,7 @@ using Json = nlohmann::json;
 int main() {
     auto apiKey = std::getenv("OPENAI_API_KEY");
     if (!apiKey) {
-        std::println("OPENAI_API_KEY not set, skipping");
+        println("OPENAI_API_KEY not set, skipping");
         return 0;
     }
 
@@ -30,8 +31,8 @@ int main() {
     auto json = Json::parse(resp.text());
     assert(json.contains("name"));
     assert(json.contains("age"));
-    std::println("JSON output: {}", resp.text());
+    println("JSON output: ", resp.text());
 
-    std::println("test_structured_output: ALL PASSED");
+    println("test_structured_output: ALL PASSED");
     return 0;
 }

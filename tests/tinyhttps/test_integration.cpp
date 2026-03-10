@@ -2,6 +2,7 @@ import mcpplibs.tinyhttps;
 import std;
 
 #include <cassert>
+#include "../test_print.hpp"
 
 int main() {
     using namespace mcpplibs::tinyhttps;
@@ -46,6 +47,6 @@ int main() {
     assert(events[0].event == "content_block_delta");
 
     Socket::platform_cleanup();
-    std::println("test_integration (tinyhttps): ALL PASSED");
+    println("test_integration (tinyhttps): ALL PASSED");
     return 0;
 }

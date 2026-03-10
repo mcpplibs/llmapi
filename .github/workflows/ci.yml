@@ -92,8 +92,10 @@ jobs:
 
       - name: Configure xmake
         run: |
-          LLVM_SDK="$HOME/.xlings/data/xpkgs/xim-x-llvm/20.1.7"
-          test -n "$LLVM_SDK"
+          LLVM_ROOT="$HOME/.xlings/data/xpkgs/xim-x-llvm"
+          LLVM_SDK=$(find "$LLVM_ROOT" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)
+          test -d "$LLVM_SDK"
+          "$LLVM_SDK/bin/clang++" --version
           xmake f -m release --toolchain=llvm --sdk="$LLVM_SDK" -y -vvD
 
       - name: Build with xmake

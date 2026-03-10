@@ -2,6 +2,7 @@ import mcpplibs.llmapi;
 import std;
 
 #include <cassert>
+#include "../test_print.hpp"
 
 using namespace mcpplibs::llmapi;
 
@@ -26,6 +27,6 @@ int main() {
     }));
     assert(client.provider().name() == "anthropic");
 
-    std::println("test_anthropic_serialize: ALL PASSED");
+    println("test_anthropic_serialize: ALL PASSED");
     return 0;
 }

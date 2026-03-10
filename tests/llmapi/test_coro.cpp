@@ -2,6 +2,7 @@ import mcpplibs.llmapi;
 import std;
 
 #include <cassert>
+#include "../test_print.hpp"
 
 using namespace mcpplibs::llmapi;
 
@@ -74,6 +75,6 @@ int main() {
     auto asyncResp = mock.chat_async({}, {});
     assert(asyncResp.get().text() == "mock async");
 
-    std::println("test_coro: ALL PASSED");
+    println("test_coro: ALL PASSED");
     return 0;
 }

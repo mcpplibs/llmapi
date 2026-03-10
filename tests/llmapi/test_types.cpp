@@ -2,6 +2,7 @@ import mcpplibs.llmapi;
 import std;
 
 #include <cassert>
+#include "../test_print.hpp"
 
 int main() {
     using namespace mcpplibs::llmapi;
@@ -81,6 +82,6 @@ int main() {
     // Test 10: StopReason enum
     assert(StopReason::EndOfTurn != StopReason::ToolUse);
 
-    std::println("test_types: ALL PASSED");
+    println("test_types: ALL PASSED");
     return 0;
 }

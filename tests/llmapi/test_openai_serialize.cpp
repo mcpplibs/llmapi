@@ -3,6 +3,7 @@ import mcpplibs.llmapi.nlohmann.json;
 import std;
 
 #include <cassert>
+#include "../test_print.hpp"
 
 using namespace mcpplibs::llmapi;
 using Json = nlohmann::json;
@@ -33,6 +34,6 @@ int main() {
     // Test 4: provider() access
     assert(client.provider().name() == "openai");
 
-    std::println("test_openai_serialize: ALL PASSED");
+    println("test_openai_serialize: ALL PASSED");
     return 0;
 }
