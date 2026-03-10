@@ -2,12 +2,14 @@
 import mcpplibs.llmapi;
 import std;
 
+#include "print.hpp"
+
 using namespace mcpplibs::llmapi;
 
 int main() {
     auto apiKey = std::getenv("OPENAI_API_KEY");
     if (!apiKey) {
-        std::println("Error: OPENAI_API_KEY not set");
+        println("Error: OPENAI_API_KEY not set");
         return 1;
     }
 
@@ -17,29 +19,34 @@ int main() {
     }));
     client.system("You are a helpful assistant.");
 
-    std::println("AI Chat CLI - Type 'quit' to exit\n");
+    println("AI Chat CLI - Type 'quit' to exit");
+    println();
 
     while (true) {
-        std::print("You: ");
+        print("You: ");
         std::string input;
         std::getline(std::cin, input);
 
         if (input == "quit" || input == "q") {
-            std::println("\nBye!");
+            println();
+            println("Bye!");
             break;
         }
 
         if (input.empty()) continue;
 
         try {
-            std::print("\nAI: ");
+            print("\nAI: ");
             client.chat_stream(input, [](std::string_view chunk) {
-                std::print("{}", chunk);
+                print(chunk);
             });
-            std::println("\n");
+            println();
+            println();
 
         } catch (const std::exception& e) {
-            std::println("\nError: {}\n", e.what());
+            println();
+            println("Error: ", e.what());
+            println();
         }
     }
 

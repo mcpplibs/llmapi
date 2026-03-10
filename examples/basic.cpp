@@ -2,12 +2,14 @@
 import mcpplibs.llmapi;
 import std;
 
+#include "print.hpp"
+
 using namespace mcpplibs::llmapi;
 
 int main() {
     auto apiKey = std::getenv("OPENAI_API_KEY");
     if (!apiKey) {
-        std::println("Error: OPENAI_API_KEY not set");
+        println("Error: OPENAI_API_KEY not set");
         return 1;
     }
 
@@ -17,35 +19,43 @@ int main() {
     }));
     client.system("You are a helpful assistant.");
 
-    std::println("=== llmapi Basic Usage Demo ===\n");
+    println("=== llmapi Basic Usage Demo ===");
+    println();
 
     try {
         // Example 1: Non-streaming request
-        std::println("[Example 1] Non-streaming mode:");
-        std::println("Question: What is the capital of China?\n");
+        println("[Example 1] Non-streaming mode:");
+        println("Question: What is the capital of China?");
+        println();
 
         auto resp = client.chat("What is the capital of China?");
-        std::println("Answer: {}\n", resp.text());
+        println("Answer: ", resp.text());
+        println();
 
         // Example 2: Streaming request
-        std::println("[Example 2] Streaming mode:");
-        std::println("Question: Convince me to use modern C++ (100 words)\n");
+        println("[Example 2] Streaming mode:");
+        println("Question: Convince me to use modern C++ (100 words)");
+        println();
 
         client.clear();
         client.system("You are a helpful assistant.");
-        std::print("Answer: ");
+        print("Answer: ");
         auto resp2 = client.chat_stream("Convince me to use modern C++ (100 words)",
             [](std::string_view chunk) {
-                std::print("{}", chunk);
+                print(chunk);
             });
-        std::println("\n");
-        std::println("[Verification] Answer length: {} chars\n", resp2.text().size());
+        println();
+        println();
+        println("[Verification] Answer length: ", resp2.text().size(), " chars");
+        println();
 
     } catch (const std::exception& e) {
-        std::println("\nError: {}\n", e.what());
+        println();
+        println("Error: ", e.what());
+        println();
         return 1;
     }
 
-    std::println("=== Demo Complete ===");
+    println("=== Demo Complete ===");
     return 0;
 }
