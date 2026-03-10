@@ -456,7 +456,7 @@ private:
         tinyhttps::HttpRequest req;
         req.method = tinyhttps::Method::POST;
         req.url = config_.baseUrl + std::string(endpoint);
-        req.body = payload.dump();
+        req.body = payload.dump(-1, ' ', false, Json::error_handler_t::replace);
 
         req.headers["Content-Type"] = "application/json";
         req.headers["x-api-key"] = config_.apiKey;
