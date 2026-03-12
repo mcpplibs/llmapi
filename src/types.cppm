@@ -40,11 +40,16 @@ export using ContentPart =
     std::variant<TextContent, ImageContent, AudioContent, ToolUseContent, ToolResultContent>;
 export using Content = std::variant<std::string, std::vector<ContentPart>>;
 
+export struct CacheControl {
+    std::string type {"ephemeral"};
+};
+
 // Message
 export struct Message {
     Role role;
     Content content;
     std::string name;
+    std::optional<CacheControl> cacheControl;
 
     static Message system(std::string_view text) {
         return Message{.role = Role::System, .content = std::string{text}};
@@ -111,6 +116,8 @@ export struct Usage {
     int inputTokens{0};
     int outputTokens{0};
     int totalTokens{0};
+    int cacheCreationTokens{0};
+    int cacheReadTokens{0};
 };
 
 // Chat response
@@ -251,6 +258,9 @@ inline Json messageToJson(const Message& msg) {
             j["content"] = arr;
         }
     }, msg.content);
+    if (msg.cacheControl) {
+        j["cache_control"] = Json{{"type", msg.cacheControl->type}};
+    }
     return j;
 }
 
@@ -267,6 +277,9 @@ inline Message messageFromJson(const Json& j) {
         }
         msg.content = std::move(parts);
     }
+    if (j.contains("cache_control") && j["cache_control"].is_object()) {
+        msg.cacheControl = CacheControl{.type = j["cache_control"].value("type", "ephemeral")};
+    }
     return msg;
 }
 
@@ -277,7 +290,7 @@ void Conversation::save(std::string_view filePath) const {
         j["messages"].push_back(messageToJson(msg));
     }
     std::ofstream out{std::string{filePath}};
-    out << j.dump(2);
+    out << j.dump(2, ' ', false, Json::error_handler_t::replace);
 }
 
 Conversation Conversation::load(std::string_view filePath) {

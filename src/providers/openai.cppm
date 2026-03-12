@@ -133,6 +133,9 @@ public:
                     result.usage.inputTokens = usage.value("prompt_tokens", 0);
                     result.usage.outputTokens = usage.value("completion_tokens", 0);
                     result.usage.totalTokens = result.usage.inputTokens + result.usage.outputTokens;
+                    if (usage.contains("prompt_tokens_details") && usage["prompt_tokens_details"].is_object()) {
+                        result.usage.cacheReadTokens = usage["prompt_tokens_details"].value("cached_tokens", 0);
+                    }
                 }
             } catch (const Json::exception&) {
                 // Skip malformed chunks
@@ -303,6 +306,7 @@ private:
 
         if (stream) {
             payload["stream"] = true;
+            payload["stream_options"] = Json{{"include_usage", true}};
         }
 
         if (params.temperature.has_value()) {
@@ -425,6 +429,9 @@ private:
             result.usage.inputTokens = usage.value("prompt_tokens", 0);
             result.usage.outputTokens = usage.value("completion_tokens", 0);
             result.usage.totalTokens = result.usage.inputTokens + result.usage.outputTokens;
+            if (usage.contains("prompt_tokens_details") && usage["prompt_tokens_details"].is_object()) {
+                result.usage.cacheReadTokens = usage["prompt_tokens_details"].value("cached_tokens", 0);
+            }
         }
 
         return result;

@@ -101,6 +101,8 @@ public:
                         }
                         if (msg.contains("usage")) {
                             result.usage.inputTokens = msg["usage"].value("input_tokens", 0);
+                            result.usage.cacheCreationTokens = msg["usage"].value("cache_creation_input_tokens", 0);
+                            result.usage.cacheReadTokens = msg["usage"].value("cache_read_input_tokens", 0);
                         }
                     }
                 } else if (event.event == "content_block_start") {
@@ -324,7 +326,13 @@ private:
         auto [systemText, msgArray] = extract_system_and_messages_(messages);
 
         if (!systemText.empty()) {
-            payload["system"] = systemText;
+            Json sysBlocks = Json::array();
+            Json block;
+            block["type"] = "text";
+            block["text"] = systemText;
+            block["cache_control"] = Json{{"type", "ephemeral"}};
+            sysBlocks.push_back(block);
+            payload["system"] = sysBlocks;
         }
         payload["messages"] = msgArray;
 
@@ -348,7 +356,8 @@ private:
         // Tools — Anthropic format (no function wrapper)
         if (params.tools.has_value() && !params.tools->empty()) {
             Json tools = Json::array();
-            for (const auto& tool : *params.tools) {
+            for (std::size_t i = 0; i < params.tools->size(); ++i) {
+                const auto& tool = (*params.tools)[i];
                 Json t;
                 t["name"] = tool.name;
                 t["description"] = tool.description;
@@ -356,6 +365,10 @@ private:
                     t["input_schema"] = Json::parse(tool.inputSchema);
                 } else {
                     t["input_schema"] = Json{{"type", "object"}};
+                }
+                // Add cache_control on last tool
+                if (i == params.tools->size() - 1) {
+                    t["cache_control"] = Json{{"type", "ephemeral"}};
                 }
                 tools.push_back(t);
             }
@@ -428,6 +441,8 @@ private:
             result.usage.inputTokens = usage.value("input_tokens", 0);
             result.usage.outputTokens = usage.value("output_tokens", 0);
             result.usage.totalTokens = result.usage.inputTokens + result.usage.outputTokens;
+            result.usage.cacheCreationTokens = usage.value("cache_creation_input_tokens", 0);
+            result.usage.cacheReadTokens = usage.value("cache_read_input_tokens", 0);
         }
 
         return result;

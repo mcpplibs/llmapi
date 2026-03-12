@@ -1,5 +1,5 @@
 set_languages("c++23")
-set_version("0.2.0")
+set_version("0.2.3")
 set_policy("build.c++.modules", true)
 
 add_repositories("mcpplibs-index https://github.com/mcpplibs/mcpplibs-index.git")
