@@ -22,23 +22,6 @@
 - Conversation save/load helpers
 - OpenAI-compatible endpoint support through `openai::Config::baseUrl`
 
-## Production Readiness
-
-`llmapi` is usable for internal tools, prototypes, and early production experiments, but it should not yet be treated as fully industrial-grade infrastructure.
-
-Required gaps before that bar:
-
-- Unified error model across providers and transport
-- Retry, backoff, timeout, and idempotency policy
-- Request cancellation for long-running and streaming calls
-- Logging, metrics, trace hooks, and request correlation
-- Hardening of the custom HTTP/TLS transport layer
-- Fault-injection, concurrency, and large-scale mock testing
-- Stronger API compatibility and versioning guarantees
-- More complete production configuration surface
-- Explicit thread-safety and concurrency semantics
-- Operational documentation for retries, keys, proxies, and failure handling
-
 ## Quick Start
 
 ```cpp
