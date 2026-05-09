@@ -1,6 +1,6 @@
 [package]
 name        = "mcpplibs.llmapi"
-version     = "0.2.3"
+version     = "0.2.5"
 description = "Modern C++ LLM API client with openai-compatible support"
 license     = "Apache-2.0"
 repo        = "https://github.com/mcpplibs/llmapi"
@@ -17,12 +17,10 @@ kind = "lib"
 # already does `export module mcpplibs.llmapi;` and re-exports every
 # partition + the third-party `mcpplibs.llmapi.nlohmann.json` module,
 # so consumers just `import mcpplibs.llmapi;`.
-
-# Direct deps. mbedtls is also pulled by mcpplibs.tinyhttps, but mcpp
-# 0.0.2 doesn't propagate transitive includes — list it here so its
-# headers are visible while compiling tinyhttps's TLS partition.
-[dependencies]
-mbedtls = "3.6.1"
+#
+# mbedtls is pulled transitively through tinyhttps (which lists it as a
+# direct dep). mcpp 0.0.3's transitive walker propagates its include_dirs
+# along that chain, so we don't repeat the declaration here.
 
 [dependencies.mcpplibs]
-tinyhttps = "0.2.1"
+tinyhttps = "0.2.2"
