@@ -1,0 +1,28 @@
+[package]
+name        = "mcpplibs.llmapi"
+version     = "0.2.3"
+description = "Modern C++ LLM API client with openai-compatible support"
+license     = "Apache-2.0"
+repo        = "https://github.com/mcpplibs/llmapi"
+
+[build]
+# `src/json/json.cppm` does `#include <json.hpp>`; expose its sibling
+# header by adding `src/json` to the include search path.
+include_dirs = ["src/json"]
+
+[targets.llmapi]
+kind = "lib"
+
+# Library convention picks `src/llmapi.cppm` automatically — that file
+# already does `export module mcpplibs.llmapi;` and re-exports every
+# partition + the third-party `mcpplibs.llmapi.nlohmann.json` module,
+# so consumers just `import mcpplibs.llmapi;`.
+
+# Direct deps. mbedtls is also pulled by mcpplibs.tinyhttps, but mcpp
+# 0.0.2 doesn't propagate transitive includes — list it here so its
+# headers are visible while compiling tinyhttps's TLS partition.
+[dependencies]
+mbedtls = "3.6.1"
+
+[dependencies.mcpplibs]
+tinyhttps = "0.2.1"
