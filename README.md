@@ -91,6 +91,34 @@ target("demo")
 
 See [docs/en/getting-started.md](docs/en/getting-started.md), [docs/en/providers.md](docs/en/providers.md), and [docs/en/README.md](docs/en/README.md) for more setup and readiness detail.
 
+## 使用 mcpp 构建
+
+### 添加依赖
+
+```bash
+mcpp add llmapi@0.2.5
+```
+
+或在 `mcpp.toml` 中手动添加：
+
+```toml
+[dependencies]
+llmapi = "0.2.5"
+```
+
+### 构建
+
+```bash
+mcpp build
+```
+
+### 代码示例
+
+```cpp
+import mcpplibs.llmapi;
+// ... usage example
+```
+
 ## License
 
 Apache-2.0 - see [LICENSE](LICENSE)
