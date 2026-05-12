@@ -14,7 +14,7 @@ jobs:
 
       - name: Install xlings
         env:
-          XLINGS_VERSION: 0.4.30
+          XLINGS_VERSION: 0.4.31
         run: |
           tarball="xlings-${XLINGS_VERSION}-linux-x86_64.tar.gz"
           curl -fsSL -o "/tmp/${tarball}" \
@@ -23,17 +23,14 @@ jobs:
           "/tmp/xlings-${XLINGS_VERSION}-linux-x86_64/subos/default/bin/xlings" self install
           echo "$HOME/.xlings/subos/current/bin" >> "$GITHUB_PATH"
 
-      - name: Install workspace tools (.xlings.json → mcpp 0.0.11)
+      - name: Install workspace tools (.xlings.json → mcpp 0.0.13)
         run: xlings install -y
 
       - name: Cache mcpp sandbox
         uses: actions/cache@v4
         with:
-          path: ~/.xlings/data/xpkgs/xim-x-mcpp/0.0.11/registry
-          key: mcpp-sandbox-${{ runner.os }}-mcpp0.0.11-v3
-
-      - name: Update package index
-        run: mcpp index update
+          path: ~/.xlings/data/xpkgs/xim-x-mcpp/0.0.13/registry
+          key: mcpp-sandbox-${{ runner.os }}-mcpp0.0.13
 
       - name: Build with mcpp
         run: mcpp build
