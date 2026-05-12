@@ -23,6 +23,9 @@ jobs:
           "/tmp/xlings-${XLINGS_VERSION}-linux-x86_64/subos/default/bin/xlings" self install
           echo "$HOME/.xlings/subos/current/bin" >> "$GITHUB_PATH"
 
+      - name: Refresh package index
+        run: xlings update
+
       - name: Install workspace tools (.xlings.json → mcpp 0.0.13)
         run: xlings install -y
 
