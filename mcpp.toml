@@ -12,5 +12,5 @@ include_dirs = ["src/json"]
 [targets.llmapi]
 kind = "lib"
 
-[dependencies.mcpplibs]
-tinyhttps = "0.2.2"
+[dependencies]
+"mcpplibs.tinyhttps" = "0.2.2"
