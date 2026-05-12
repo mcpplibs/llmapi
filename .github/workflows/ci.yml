@@ -35,5 +35,8 @@ jobs:
           path: ~/.xlings/data/xpkgs/xim-x-mcpp/0.0.11/registry
           key: mcpp-sandbox-${{ runner.os }}-mcpp0.0.11-v2
 
+      - name: Update package index
+        run: mcpp index update
+
       - name: Build with mcpp
         run: mcpp build
