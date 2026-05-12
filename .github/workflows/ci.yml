@@ -39,4 +39,13 @@ jobs:
         run: mcpp index update
 
       - name: Build with mcpp
-        run: mcpp build
+        run: |
+          mcpp build 2>&1 || {
+            echo "=== MCPP ENV ==="
+            mcpp self env 2>&1 || true
+            echo "=== XPKGS DIR ==="
+            MCPP_HOME_DIR=$(mcpp self env 2>&1 | grep 'MCPP_HOME' | head -1 | sed 's/.*= *//')
+            find "$MCPP_HOME_DIR" -path "*/xpkgs/*tinyhttps*" -maxdepth 5 2>/dev/null || echo "not found in MCPP_HOME"
+            find ~/.xlings -path "*/xpkgs/*tinyhttps*" -maxdepth 5 2>/dev/null || echo "not found in ~/.xlings"
+            exit 1
+          }
