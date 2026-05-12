@@ -13,4 +13,4 @@ include_dirs = ["src/json"]
 kind = "lib"
 
 [dependencies.mcpplibs]
-tinyhttps = "0.2.2"
+tinyhttps = "0.2.3"
