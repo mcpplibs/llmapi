@@ -38,5 +38,13 @@ jobs:
       - name: Update package index
         run: mcpp index update
 
+      - name: Debug mcpp env
+        run: |
+          mcpp self env
+          echo "--- xpkgs directory ---"
+          find $(mcpp self env 2>&1 | grep MCPP_HOME | awk -F'= ' '{print $2}')/registry/data/xpkgs -maxdepth 2 -type d 2>/dev/null || echo "no xpkgs dir"
+          echo "--- xlings global data ---"
+          ls ~/.xlings/data/xpkgs/ 2>/dev/null | head -20 || echo "no global xpkgs"
+
       - name: Build with mcpp
         run: mcpp build
