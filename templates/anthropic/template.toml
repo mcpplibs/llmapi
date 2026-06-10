@@ -1,0 +1,3 @@
+[template]
+description  = "Anthropic (Claude) chat via AnthropicConfig"
+post_message = "cd into the project, export ANTHROPIC_API_KEY, then `mcpp run`."

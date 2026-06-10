@@ -1,0 +1,3 @@
+[template]
+description  = "OpenAI-compatible endpoint via baseUrl (DeepSeek)"
+post_message = "cd into the project, export DEEPSEEK_API_KEY, then `mcpp run`."
