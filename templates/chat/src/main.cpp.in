@@ -8,7 +8,7 @@ int main() {
 
     auto apiKey = std::getenv("OPENAI_API_KEY");
     if (!apiKey) {
-        std::println(stderr, "OPENAI_API_KEY not set");
+        std::println(std::cerr, "OPENAI_API_KEY not set");
         return 1;
     }
 
@@ -21,21 +21,23 @@ int main() {
     std::println("{{project.name}} — chat CLI (type 'quit' to exit)");
 
     while (true) {
-        std::print("\nYou: ");
+        std::print(std::cout, "\nYou: ");
+        std::cout.flush();
         std::string input;
         if (!std::getline(std::cin, input)) break;
         if (input == "quit" || input == "q") break;
         if (input.empty()) continue;
 
         try {
-            std::print("AI: ");
+            std::print(std::cout, "AI: ");
+            std::cout.flush();
             client.chat_stream(input, [](std::string_view chunk) {
-                std::print("{}", chunk);
-                std::fflush(stdout);
+                std::print(std::cout, "{}", chunk);
+                std::cout.flush();
             });
             std::println("");
         } catch (const std::exception& e) {
-            std::println(stderr, "\nError: {}", e.what());
+            std::println(std::cerr, "\nError: {}", e.what());
         }
     }
 

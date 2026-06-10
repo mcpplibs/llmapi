@@ -30,7 +30,7 @@ mcpp add llmapi
 
 ```toml
 [dependencies.mcpplibs]
-llmapi = "0.2.7"
+llmapi = "0.2.8"
 ```
 
 ## 从源码构建

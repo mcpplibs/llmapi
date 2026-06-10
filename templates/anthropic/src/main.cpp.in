@@ -7,7 +7,7 @@ int main() {
 
     auto apiKey = std::getenv("ANTHROPIC_API_KEY");
     if (!apiKey) {
-        std::println(stderr, "ANTHROPIC_API_KEY not set");
+        std::println(std::cerr, "ANTHROPIC_API_KEY not set");
         return 1;
     }
 

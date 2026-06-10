@@ -37,3 +37,6 @@ jobs:
 
       - name: Build with mcpp
         run: mcpp build
+
+      - name: Template smoke (compile each template against this checkout)
+        run: bash tools/template_smoke.sh
