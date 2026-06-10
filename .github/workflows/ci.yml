@@ -26,14 +26,14 @@ jobs:
       - name: Refresh package index
         run: xlings update
 
-      - name: Install workspace tools (.xlings.json → mcpp 0.0.13)
+      - name: Install workspace tools (.xlings.json → mcpp 0.0.53)
         run: xlings install -y
 
       - name: Cache mcpp sandbox
         uses: actions/cache@v4
         with:
-          path: ~/.xlings/data/xpkgs/xim-x-mcpp/0.0.13/registry
-          key: mcpp-sandbox-${{ runner.os }}-mcpp0.0.13
+          path: ~/.xlings/data/xpkgs/xim-x-mcpp/0.0.53/registry
+          key: mcpp-sandbox-${{ runner.os }}-mcpp0.0.53
 
       - name: Build with mcpp
         run: mcpp build

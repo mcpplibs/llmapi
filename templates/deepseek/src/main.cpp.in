@@ -1,0 +1,26 @@
+// {{project.name}} — generated from {{self.name}}@{{self.version}}:deepseek
+// Any OpenAI-compatible endpoint works the same way — change baseUrl/model.
+import mcpplibs.llmapi;
+import std;
+
+int main() {
+    using namespace mcpplibs::llmapi;
+
+    auto apiKey = std::getenv("DEEPSEEK_API_KEY");
+    if (!apiKey) {
+        std::println(stderr, "DEEPSEEK_API_KEY not set");
+        return 1;
+    }
+
+    auto client = Client(Config{
+        .apiKey = apiKey,
+        .baseUrl = std::string(URL::DeepSeek),
+        .model = "deepseek-chat",
+    });
+
+    client.system("You are a concise assistant.");
+    auto resp = client.chat("Say hello from {{project.name}} in one sentence.");
+
+    std::println("{}", resp.text());
+    return 0;
+}

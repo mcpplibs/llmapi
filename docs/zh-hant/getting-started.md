@@ -2,22 +2,35 @@
 
 ## 環境需求
 
-- 編譯器：GCC 14+、Clang 18+ 或 MSVC 2022+
-- 建置工具：`xmake`
-- 依賴：`mbedtls` 由 xmake 自動處理
+- 建置工具：[mcpp](https://github.com/mcpp-community/mcpp) — 工具鏈與相依
+  （如 `tinyhttps`）自動解析
+- 也可以在 xmake 專案中使用，見[使用 xmake 整合](xmake.md)
 
-## 使用 xmake 引入
+## 從模板建立專案（推薦）
 
-```lua
-add_repositories("mcpplibs-index git@github.com:mcpplibs/mcpplibs-index.git")
-add_requires("llmapi 0.1.0")
+```bash
+mcpp new myagent --template llmapi
+cd myagent
+mcpp run
+```
 
-target("myapp")
-    set_kind("binary")
-    set_languages("c++23")
-    set_policy("build.c++.modules", true)
-    add_files("src/*.cpp")
-    add_packages("llmapi")
+列出函式庫提供的模板：
+
+```bash
+mcpp new --list-templates llmapi
+```
+
+## 在既有專案中引入
+
+```bash
+mcpp add llmapi
+```
+
+或在 `mcpp.toml` 中宣告：
+
+```toml
+[dependencies.mcpplibs]
+llmapi = "0.2.7"
 ```
 
 ## 從原始碼建置
@@ -25,9 +38,7 @@ target("myapp")
 ```bash
 git clone https://github.com/mcpplibs/llmapi.git
 cd llmapi
-
-xmake
-xmake run hello_mcpp
+mcpp build
 ```
 
 ## 第一個範例

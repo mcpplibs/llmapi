@@ -1,7 +1,7 @@
 [package]
 namespace   = "mcpplibs"
 name        = "llmapi"
-version     = "0.2.6"
+version     = "0.2.7"
 description = "Modern C++ LLM API client with openai-compatible support"
 license     = "Apache-2.0"
 repo        = "https://github.com/mcpplibs/llmapi"

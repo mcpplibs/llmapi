@@ -2,26 +2,38 @@
 
 ## Prerequisites
 
-- **C++ Compiler**: GCC 14+, Clang 18+, or MSVC 2022+ with C++23 support
-- **Build System**: [xmake](https://xmake.io/) 3.0.0+
-- **Dependencies**: `mbedtls` is resolved automatically by xmake
+- **Build Tool**: [mcpp](https://github.com/mcpp-community/mcpp) — toolchain and
+  dependencies (e.g. `tinyhttps`) are resolved automatically
+- Alternatively the library can be consumed from xmake — see
+  [Using llmapi with xmake](xmake.md)
 
 ## Installation
 
-### Using xmake Package Manager
+### Start From a Template (recommended)
 
-Add to your `xmake.lua`:
+```bash
+mcpp new myagent --template llmapi
+cd myagent
+mcpp run
+```
 
-```lua
-add_repositories("mcpplibs-index git@github.com:mcpplibs/mcpplibs-index.git")
-add_requires("llmapi 0.1.0")
+List the templates the library ships:
 
-target("myapp")
-    set_kind("binary")
-    set_languages("c++23")
-    set_policy("build.c++.modules", true)
-    add_files("src/*.cpp")
-    add_packages("llmapi")
+```bash
+mcpp new --list-templates llmapi
+```
+
+### Add To an Existing Project
+
+```bash
+mcpp add llmapi
+```
+
+Or declare it in `mcpp.toml`:
+
+```toml
+[dependencies.mcpplibs]
+llmapi = "0.2.7"
 ```
 
 ### Building from Source
@@ -29,11 +41,7 @@ target("myapp")
 ```bash
 git clone https://github.com/mcpplibs/llmapi.git
 cd llmapi
-
-xmake
-xmake run hello_mcpp
-xmake run basic
-xmake run chat
+mcpp build
 ```
 
 ## First Example
@@ -69,8 +77,7 @@ int main() {
 Build and run:
 
 ```bash
-xmake
-xmake run hello_mcpp
+mcpp run
 ```
 
 ## Environment Setup

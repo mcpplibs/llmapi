@@ -15,6 +15,7 @@
 - [範例](examples.md)
 - [Provider 設定](providers.md)
 - [進階用法](advanced.md)
+- [使用 xmake 整合](xmake.md)
 
 ## 核心能力
 

@@ -1,0 +1,4 @@
+[template]
+description  = "Minimal OpenAI chat — one request, one answer"
+default      = true
+post_message = "cd into the project, export OPENAI_API_KEY, then `mcpp run`."
