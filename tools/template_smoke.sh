@@ -19,7 +19,11 @@ fi
 SELF_NAME="llmapi"
 SELF_VERSION="$(sed -n 's/^version *= *"\([^"]*\)".*/\1/p' "$ROOT/mcpp.toml" | head -1)"
 
-TMP="$(mktemp -d)"
+# Stay inside the repo so the workspace mcpp pin (.xlings.json) still
+# resolves the `mcpp` shim; target/ is gitignored.
+TMP="$ROOT/target/template-smoke"
+rm -rf "$TMP"
+mkdir -p "$TMP"
 trap 'rm -rf "$TMP"' EXIT
 
 fail=0
