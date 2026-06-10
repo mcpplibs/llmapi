@@ -15,6 +15,7 @@ Language:
 - [Examples](examples.md) - chat, streaming, embeddings, and tool flows
 - [Providers](providers.md) - OpenAI, Anthropic, and compatible endpoints
 - [Advanced Usage](advanced.md) - persistence, async calls, and custom configuration
+- [Using llmapi with xmake](xmake.md) - consume the library from an xmake project
 
 ## What The Library Provides
 
