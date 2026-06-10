@@ -8,7 +8,7 @@ int main() {
 
     auto apiKey = std::getenv("DEEPSEEK_API_KEY");
     if (!apiKey) {
-        std::println(stderr, "DEEPSEEK_API_KEY not set");
+        std::println(std::cerr, "DEEPSEEK_API_KEY not set");
         return 1;
     }
 

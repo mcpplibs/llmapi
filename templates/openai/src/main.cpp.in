@@ -7,7 +7,7 @@ int main() {
 
     auto apiKey = std::getenv("OPENAI_API_KEY");
     if (!apiKey) {
-        std::println(stderr, "OPENAI_API_KEY not set");
+        std::println(std::cerr, "OPENAI_API_KEY not set");
         return 1;
     }
 
